@@ -1,0 +1,55 @@
+# ── Python ────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+.env
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+htmlcov/
+.coverage
+
+# ── Node / Next.js ────────────────────────────────────────
+node_modules/
+.next/
+out/
+.pnpm-store/
+
+# ── Environment variables (NEVER commit these) ────────────
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# ── IDE ───────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Docker ────────────────────────────────────────────────
+*.log
+
+# ── ML Models (too large for Git) ─────────────────────────
+*.pkl
+*.pt
+*.onnx
+mlruns/
+
+# ── Uploads / Temp ────────────────────────────────────────
+uploads/
+temp/
+*.pdf
