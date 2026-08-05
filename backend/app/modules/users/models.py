@@ -19,23 +19,14 @@ Data Model:
 
 import uuid
 
-from sqlalchemy import String, Enum as SAEnum, Boolean
+from sqlalchemy import Boolean, Enum as SAEnum, String
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import enum
 
 from app.db.base import Base, TimestampMixin, SoftDeleteMixin
+from app.modules.users.enums import UserRole  # Enum defined in enums.py (SRP)
 
-
-class UserRole(str, enum.Enum):
-    """
-    Role-Based Access Control roles.
-    USER: Standard traveller with access to their own resources.
-    ADMIN: Clarity trainer/admin with access to analytics and all data.
-    """
-
-    USER = "user"
-    ADMIN = "admin"
+__all__ = ["User"]
 
 
 class User(Base, TimestampMixin, SoftDeleteMixin):

@@ -20,24 +20,11 @@ import uuid
 from sqlalchemy import Enum as SAEnum, ForeignKey, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import enum
 
 from app.db.base import Base, TimestampMixin
+from app.modules.ai_concierge.enums import MessageRole  # SRP
 
-
-class MessageRole(str, enum.Enum):
-    """
-    The role of the message sender, following the OpenAI Chat Completions API convention.
-
-    USER: Message from the human traveller.
-    ASSISTANT: Response from the AI concierge (LLM).
-    SYSTEM: System-level prompt injected at the start of a conversation (not stored).
-    TOOL: Output from a tool/agent call (e.g. weather fetch result).
-    """
-
-    USER = "user"
-    ASSISTANT = "assistant"
-    TOOL = "tool"
+__all__ = ["ChatMessage"]
 
 
 class ChatMessage(Base, TimestampMixin):

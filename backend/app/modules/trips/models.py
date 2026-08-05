@@ -29,41 +29,14 @@ from sqlalchemy import (
     Numeric,
     String,
     Text,
-    Time,
 )
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-import enum
 
 from app.db.base import Base, TimestampMixin, SoftDeleteMixin
+from app.modules.trips.enums import BookingStatus, BookingType, TripStatus  # SRP
 
-
-class TripStatus(str, enum.Enum):
-    """Lifecycle status of a trip."""
-
-    PLANNING = "planning"
-    CONFIRMED = "confirmed"
-    ONGOING = "ongoing"
-    COMPLETED = "completed"
-    CANCELLED = "cancelled"
-
-
-class BookingType(str, enum.Enum):
-    """Type of booking attached to a trip."""
-
-    FLIGHT = "flight"
-    HOTEL = "hotel"
-    ACTIVITY = "activity"
-    TRANSPORT = "transport"
-    OTHER = "other"
-
-
-class BookingStatus(str, enum.Enum):
-    """Confirmation status of a booking."""
-
-    PENDING = "pending"
-    CONFIRMED = "confirmed"
-    CANCELLED = "cancelled"
+__all__ = ["Trip", "ItineraryItem", "Booking"]
 
 
 class Trip(Base, TimestampMixin, SoftDeleteMixin):

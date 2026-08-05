@@ -22,9 +22,9 @@ import uuid
 from pgvector.sqlalchemy import Vector
 from sqlalchemy import (
     ARRAY,
-    Float,
     ForeignKey,
     Integer,
+    Numeric,
     String,
     Text,
 )
@@ -35,6 +35,8 @@ from app.db.base import Base, SoftDeleteMixin, TimestampMixin
 
 # Dimension for OpenAI text-embedding-3-small model
 EMBEDDING_DIMENSIONS = 1536
+
+__all__ = ["Destination", "Review", "Document"]
 
 
 class Destination(Base, TimestampMixin, SoftDeleteMixin):
@@ -59,7 +61,9 @@ class Destination(Base, TimestampMixin, SoftDeleteMixin):
     description: Mapped[str] = mapped_column(Text, nullable=True)
     tags: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    avg_budget: Mapped[float | None] = mapped_column(Float, nullable=True)
+    avg_budget: Mapped[float | None] = mapped_column(
+        Numeric(precision=10, scale=2), nullable=True  # Use Numeric, never Float for money
+    )
 
     # ── Relationships ──────────────────────────────────────
     reviews: Mapped[list["Review"]] = relationship(

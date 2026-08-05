@@ -19,8 +19,7 @@ IMPORTANT: Import ALL models in alembic/env.py so Alembic can detect them.
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import Boolean, DateTime, func, String
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy import Boolean, DateTime, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
