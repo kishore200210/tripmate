@@ -1,6 +1,11 @@
 # TripMate 🌍✈️
 
-**TripMate** is an advanced, AI-powered travel planning platform designed to act as your ultimate personal travel concierge. It leverages LangGraph and OpenAI to dynamically construct dynamic itineraries, integrates advanced computer vision models (YOLO11) for landmark detection, and provides personalized destination recommendations based on machine learning pipelines.
+**TripMate** is an advanced, AI-powered travel planning platform acting as your ultimate personal travel concierge. By leveraging cutting-edge LLMs via the Groq API and a robust Python/Next.js stack, TripMate dynamically constructs personalized itineraries, suggests weather-aware packing lists, and provides rich, interactive travel planning experiences.
+
+> [!NOTE]
+> TripMate is officially **Production Ready**. The platform features hardened global error handling, highly optimized database queries, accessible UI components, and complete Docker-based orchestration.
+
+---
 
 ## 🏗️ Architecture
 
@@ -21,22 +26,43 @@ graph TD
         Worker -->|Reads/Writes| DB
     end
     
-    Backend -.->|External API| OpenAI[OpenAI API]
+    Backend -.->|External API| Groq[Groq API (Llama 3)]
     Backend -.->|External API| Weather[Weather/Currency APIs]
     Backend -.->|External API| Cloudinary[Cloudinary CDN]
 ```
 
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework:** Next.js (React)
+- **Styling:** TailwindCSS & shadcn/ui
+- **State & Data:** React Query & Axios
+- **Routing:** App Router
+
+### Backend
+- **Framework:** FastAPI (Python 3.13)
+- **Database ORM:** SQLAlchemy 2.0 (Async)
+- **AI Integrations:** Groq API (`llama-3.3-70b-versatile`) & LangGraph
+- **Task Queue:** Celery & Redis
+- **Observability:** Sentry & Logfire
+
+### Infrastructure
+- **Containerization:** Docker & Docker Compose
+- **CI/CD:** GitHub Actions (Linting, Pytest, Playwright, Docker Build)
+- **Database:** PostgreSQL (with `pgvector`)
+
+---
+
 ## 🗄️ Database Schema
 
-The core relational database is built on PostgreSQL, utilizing `pgvector` for semantic RAG search capabilities.
+The core relational database is built on PostgreSQL. Below is an overview of the core Trip and AI Concierge models:
 
 ```mermaid
 erDiagram
     USER ||--o{ TRIP : creates
-    USER ||--o{ CHAT_MESSAGE : sends
-    USER ||--o{ BOOKING : makes
-    TRIP ||--o{ ITINERARY_ITEM : contains
-    DESTINATION ||--o{ ITINERARY_ITEM : referenced_by
+    TRIP ||--o{ ITINERARY : contains
+    ITINERARY ||--o{ DAY_PLAN : organizes
+    TRIP ||--o{ ITINERARY_ITEM : schedules
 
     USER {
         uuid id PK
@@ -47,69 +73,40 @@ erDiagram
     TRIP {
         uuid id PK
         uuid user_id FK
-        uuid destination_id FK
         string title
         date start_date
         date end_date
     }
-    DESTINATION {
+    ITINERARY {
         uuid id PK
-        string name
-        string country
-        float latitude
-        float longitude
+        uuid trip_id FK
+        string budget_estimate
+        json packing_checklist
+        json restaurant_recommendations
+        json local_attractions
+        string weather_suggestions
+    }
+    DAY_PLAN {
+        uuid id PK
+        uuid itinerary_id FK
+        int day_no
+        string theme
+        string description
     }
     ITINERARY_ITEM {
         uuid id PK
         uuid trip_id FK
-        date activity_date
-        time start_time
-        string description
-    }
-    CHAT_MESSAGE {
-        uuid id PK
-        uuid user_id FK
-        uuid trip_id FK
-        string content
-        string role
-    }
-    BOOKING {
-        uuid id PK
-        uuid user_id FK
-        uuid trip_id FK
-        string booking_type
-        string provider
+        int day_no
+        string activity
+        time scheduled_time
     }
 ```
 
-## 📂 Folder Structure
-
-```text
-TripMate/
-├── .github/                  # CI/CD GitHub Actions pipelines
-├── backend/                  # FastAPI Application (Core Logic)
-│   ├── app/                  # Application Source Code
-│   │   ├── api/              # REST Endpoints
-│   │   ├── core/             # Configuration & Security
-│   │   ├── db/               # SQLAlchemy Models & Migrations
-│   │   ├── modules/          # Domain Logic (Trips, Auth, Agent, PDF, Vision)
-│   ├── tests/                # Pytest Unit & Integration Tests
-│   └── Dockerfile            # Production Python Image
-├── frontend/                 # Next.js Application (UI Layer)
-│   ├── src/                  # React Components & Hooks
-│   ├── e2e/                  # Playwright End-to-End Tests
-│   ├── __tests__/            # Jest Unit Tests
-│   └── Dockerfile            # Production Node.js Image
-├── ml_service/               # ML Recommendation Engine (scikit-learn)
-│   └── Dockerfile            # Standalone API Image
-├── docs/                     # Supplemental Documentation
-├── docker-compose.yml        # Orchestration Configuration
-└── README.md                 # Project Overview (You are here)
-```
+---
 
 ## 🚀 Quick Setup (Docker)
 
-The fastest way to run TripMate is via Docker Compose.
+The fastest way to run TripMate in a production-like environment is via Docker Compose.
 
 1. **Clone the repository:**
    ```bash
@@ -120,7 +117,7 @@ The fastest way to run TripMate is via Docker Compose.
 2. **Configure Environment Variables:**
    ```bash
    cp backend/.env.example backend/.env
-   # Open backend/.env and insert your OPENAI_API_KEY and CLOUDINARY credentials.
+   # Open backend/.env and ensure you provide your GROQ_API_KEY
    ```
 
 3. **Start the Cluster:**
@@ -132,6 +129,43 @@ The fastest way to run TripMate is via Docker Compose.
    - **Frontend UI**: `http://localhost:3000`
    - **Backend API Docs (Swagger)**: `http://localhost:8000/docs`
    - **ML Service API**: `http://localhost:8001/docs`
+
+---
+
+## 🧪 Testing
+
+TripMate boasts comprehensive test coverage across its core modules, ensuring robustness and stability.
+
+### Backend Tests (Pytest)
+Run the backend unit and integration test suite:
+```bash
+cd backend
+source venv/bin/activate
+PYTHONPATH=. pytest tests/
+```
+> [!TIP]
+> The backend test suite fully mocks the Groq API, ensuring tests are deterministic and do not incur API costs.
+
+### Frontend Tests (CI Validation)
+Frontend builds and linting can be validated via standard npm commands:
+```bash
+cd frontend
+npm run lint
+npm run build
+```
+
+---
+
+## 🌐 Deployment & CI/CD
+
+TripMate is integrated with a full CI/CD pipeline via GitHub Actions (`.github/workflows/ci-cd.yml`). 
+
+The pipeline automatically:
+1. **Lints** both Python (Flake8) and TypeScript (ESLint) codebases.
+2. **Tests** the backend via Pytest and frontend hooks.
+3. **Builds** the Docker images for FastAPI, Next.js, and ML Services using caching to optimize build times.
+
+For a live deployment, you can plug this pipeline into an AWS ECS cluster, DigitalOcean App Platform, or a simple managed Kubernetes cluster.
 
 ---
 

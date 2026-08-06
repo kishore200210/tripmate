@@ -21,7 +21,7 @@ describe('useAuthStore', () => {
   it('updates state and localStorage on login', () => {
     const { result } = renderHook(() => useAuthStore());
     
-    const mockUser = { id: '1', email: 'test@example.com', full_name: 'Test User' };
+    const mockUser = { id: '1', email: 'test@example.com', name: 'Test User', role: 'user', is_active: true };
     
     act(() => {
       result.current.login('fake-token', mockUser);
@@ -36,7 +36,7 @@ describe('useAuthStore', () => {
   it('clears state and localStorage on logout', () => {
     const { result } = renderHook(() => useAuthStore());
     
-    const mockUser = { id: '1', email: 'test@example.com', full_name: 'Test User' };
+    const mockUser = { id: '1', email: 'test@example.com', name: 'Test User', role: 'user', is_active: true };
     
     act(() => {
       result.current.login('fake-token', mockUser);

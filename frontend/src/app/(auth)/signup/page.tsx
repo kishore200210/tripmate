@@ -26,7 +26,7 @@ export default function SignupPage() {
       {
         email: email,
         password: password,
-        full_name: name,
+        name: name,
       },
       {
         onSuccess: () => {

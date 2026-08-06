@@ -46,3 +46,26 @@ class TimelineResponse(BaseModel):
     trip_id: UUID
     items: list[ItineraryItemResponse]
     total_items: int
+
+class DayPlanResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    itinerary_id: UUID
+    day_no: int
+    theme: str
+    description: str
+
+class ItineraryResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    id: UUID
+    trip_id: UUID
+    budget_estimate: str | None
+    packing_checklist: str | None
+    restaurant_recommendations: str | None
+    local_attractions: str | None
+    weather_suggestions: str | None
+    day_plans: list[DayPlanResponse] = []
+
+class AIGenerateRequest(BaseModel):
+    # Optional context to pass to the AI
+    preferences: str | None = Field(None, description="User preferences like 'Relaxing', 'Adventure', 'Vegetarian'")

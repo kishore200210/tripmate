@@ -19,10 +19,8 @@ export default function LoginPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const params = new URLSearchParams();
-    params.append("username", email);
-    params.append("password", password);
-    loginMutation.mutate(params);
+    // Pass plain JSON object — backend expects { email, password }
+    loginMutation.mutate({ email, password });
   };
 
   return (

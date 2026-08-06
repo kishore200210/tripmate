@@ -35,11 +35,16 @@ class TripService(BaseService[TripRepository]):
         self.destination_repository = destination_repository
 
     async def get_user_trips(
-        self, current_user: User, skip: int = 0, limit: int = 20, status: TripStatus | None = None
+        self,
+        current_user: User,
+        skip: int = 0,
+        limit: int = 20,
+        status: TripStatus | None = None,
+        query: str | None = None,
     ) -> TripPaginatedResponse:
         """List trips belonging to the authenticated user."""
         items, total = await self.repository.get_user_trips(
-            user_id=current_user.id, skip=skip, limit=limit, status=status
+            user_id=current_user.id, skip=skip, limit=limit, status=status, query=query
         )
         return TripPaginatedResponse(
             items=[TripResponse.model_validate(t) for t in items],

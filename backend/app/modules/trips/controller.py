@@ -23,9 +23,16 @@ class TripController:
 
     @staticmethod
     async def get_user_trips(
-        skip: int, limit: int, status: TripStatus | None, service: TripService, current_user: User
+        skip: int,
+        limit: int,
+        status: TripStatus | None,
+        query: str | None,
+        service: TripService,
+        current_user: User,
     ) -> TripPaginatedResponse:
-        return await service.get_user_trips(current_user, skip=skip, limit=limit, status=status)
+        return await service.get_user_trips(
+            current_user, skip=skip, limit=limit, status=status, query=query
+        )
 
     @staticmethod
     async def get_trip(

@@ -3,7 +3,9 @@ import { create } from "zustand";
 interface User {
   id: string;
   email: string;
-  full_name: string;
+  name: string;      // Backend UserResponse returns 'name', not 'full_name'
+  role: string;
+  is_active: boolean;
 }
 
 interface AuthState {
@@ -15,6 +17,7 @@ interface AuthState {
   login: (token: string, user: User) => void;
   logout: () => void;
   checkAuth: () => void;
+  updateUser: (user: User) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -50,5 +53,12 @@ export const useAuthStore = create<AuthState>((set) => ({
         set({ user: null, isAuthenticated: false, isLoading: false });
       }
     }
+  },
+
+  updateUser: (user) => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("auth_user", JSON.stringify(user));
+    }
+    set({ user });
   }
 }));

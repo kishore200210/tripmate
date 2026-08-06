@@ -1,7 +1,12 @@
 """
 app/modules/destinations/controller.py
 
-Destination Controller — thin HTTP translation layer for destinations.
+Destination Controller — thin HTTP translation layer.
+
+Responsibilities:
+    - Translates HTTP request parameters into service calls.
+    - Does NOT contain business logic — delegates entirely to DestinationService.
+    - Returns typed response schemas — never raw model instances.
 """
 
 from uuid import UUID
@@ -10,6 +15,7 @@ from fastapi import UploadFile
 
 from app.modules.auth.schemas import MessageResponse
 from app.modules.destinations.schemas import (
+    DestinationCountResponse,
     DestinationCreateRequest,
     DestinationPaginatedResponse,
     DestinationResponse,
@@ -19,7 +25,13 @@ from app.modules.destinations.service import DestinationService
 
 
 class DestinationController:
-    """Thin HTTP controller for the Destinations module."""
+    """Thin HTTP controller — no business logic, only delegation to the service layer."""
+
+    @staticmethod
+    async def count_destinations(
+        service: DestinationService,
+    ) -> DestinationCountResponse:
+        return await service.get_count()
 
     @staticmethod
     async def search_destinations(
@@ -58,7 +70,9 @@ class DestinationController:
 
     @staticmethod
     async def update_destination(
-        destination_id: UUID, payload: DestinationUpdateRequest, service: DestinationService
+        destination_id: UUID,
+        payload: DestinationUpdateRequest,
+        service: DestinationService,
     ) -> DestinationResponse:
         return await service.update_destination(destination_id, payload)
 

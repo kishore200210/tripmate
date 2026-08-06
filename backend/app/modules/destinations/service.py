@@ -1,11 +1,20 @@
 """
 app/modules/destinations/service.py
 
-Destination Service — business logic for destination management.
+Destination Service — all business logic for destination management.
+
+Responsibilities:
+    - Input validation beyond schema-level rules (e.g. uniqueness checks).
+    - Orchestrating repository calls.
+    - Mapping domain models to/from Pydantic response schemas.
+    - Image file handling for local uploads.
+
+Architecture:
+    - Zero HTTP knowledge here — raises domain exceptions only.
+    - Controllers call services; services call repositories.
 """
 
 import logging
-import os
 import shutil
 import uuid
 from pathlib import Path
@@ -13,7 +22,6 @@ from uuid import UUID
 
 from fastapi import UploadFile
 
-from app.core.config import get_settings
 from app.core.exceptions import (
     BusinessRuleViolationException,
     ResourceAlreadyExistsException,
@@ -23,6 +31,7 @@ from app.core.exceptions import (
 from app.modules.destinations.models import Destination
 from app.modules.destinations.repository import DestinationRepository
 from app.modules.destinations.schemas import (
+    DestinationCountResponse,
     DestinationCreateRequest,
     DestinationPaginatedResponse,
     DestinationResponse,
@@ -31,7 +40,6 @@ from app.modules.destinations.schemas import (
 from app.shared.service import BaseService
 
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 UPLOAD_DIR = Path("uploads/destinations")
 
@@ -42,6 +50,8 @@ class DestinationService(BaseService[DestinationRepository]):
     def __init__(self, repository: DestinationRepository) -> None:
         super().__init__(repository=repository)
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+
+    # ── Read Operations ───────────────────────────────────────────────────────
 
     async def search_destinations(
         self,
@@ -54,8 +64,9 @@ class DestinationService(BaseService[DestinationRepository]):
         sort_desc: bool = False,
         is_admin: bool = False,
     ) -> DestinationPaginatedResponse:
-        """Search destinations with filtering and pagination."""
-        valid_sort_fields = {"name", "country", "avg_budget", "created_at"}
+        """Search destinations with filtering, sorting, and pagination."""
+        # Guard against arbitrary column injection via sort_by.
+        valid_sort_fields = {"name", "country", "avg_budget", "created_at", "duration_days"}
         if sort_by not in valid_sort_fields:
             sort_by = "name"
 
@@ -77,53 +88,83 @@ class DestinationService(BaseService[DestinationRepository]):
             limit=limit,
         )
 
-    async def get_destination(self, destination_id: UUID, is_admin: bool = False) -> DestinationResponse:
-        """Get a single destination by ID."""
+    async def get_destination(
+        self, destination_id: UUID, is_admin: bool = False
+    ) -> DestinationResponse:
+        """Fetch a single destination by ID."""
         destination = await self.repository.get_by_id(destination_id)
         if not destination or destination.is_deleted:
             raise ResourceNotFoundException("Destination not found.")
-            
         return DestinationResponse.model_validate(destination)
 
-    async def create_destination(self, payload: DestinationCreateRequest) -> DestinationResponse:
-        """Create a new destination (Admin only)."""
-        logger.info("DestinationService.create_destination: %s", payload.name)
-        
+    async def get_count(self) -> DestinationCountResponse:
+        """Return the total count of active destinations (for dashboard)."""
+        total = await self.repository.get_count()
+        return DestinationCountResponse(total=total)
+
+    # ── Write Operations ──────────────────────────────────────────────────────
+
+    async def create_destination(
+        self, payload: DestinationCreateRequest
+    ) -> DestinationResponse:
+        """Create a new destination catalog entry (Admin only)."""
+        logger.info("DestinationService.create_destination: name=%s", payload.name)
+
         if await self.repository.name_exists(payload.name):
-            raise ResourceAlreadyExistsException("A destination with this name already exists.")
+            raise ResourceAlreadyExistsException(
+                "A destination with this name already exists."
+            )
 
         destination = Destination(
             id=uuid.uuid4(),
             name=payload.name.strip(),
             country=payload.country.strip(),
+            city=payload.city.strip() if payload.city else None,
             description=payload.description.strip(),
+            image_url=payload.image_url,
+            best_time_to_visit=payload.best_time_to_visit,
             avg_budget=payload.avg_budget,
-            tags=payload.tags,
+            duration_days=payload.duration_days,
+            tags=payload.tags or [],
         )
+
         created = await self.repository.create(destination)
         return DestinationResponse.model_validate(created)
 
     async def update_destination(
         self, destination_id: UUID, payload: DestinationUpdateRequest
     ) -> DestinationResponse:
-        """Update an existing destination (Admin only)."""
+        """Partially update a destination (Admin only)."""
         logger.info("DestinationService.update_destination: id=%s", destination_id)
-        
+
         destination = await self.repository.get_by_id(destination_id)
         if not destination or destination.is_deleted:
             raise ResourceNotFoundException("Destination not found.")
 
+        # Name uniqueness check — skip if name unchanged.
         if payload.name and payload.name.strip() != destination.name:
-            if await self.repository.name_exists(payload.name, exclude_id=destination_id):
-                raise ResourceAlreadyExistsException("A destination with this name already exists.")
+            if await self.repository.name_exists(
+                payload.name, exclude_id=destination_id
+            ):
+                raise ResourceAlreadyExistsException(
+                    "A destination with this name already exists."
+                )
             destination.name = payload.name.strip()
 
         if payload.country is not None:
             destination.country = payload.country.strip()
+        if payload.city is not None:
+            destination.city = payload.city.strip()
         if payload.description is not None:
             destination.description = payload.description.strip()
+        if payload.image_url is not None:
+            destination.image_url = payload.image_url
+        if payload.best_time_to_visit is not None:
+            destination.best_time_to_visit = payload.best_time_to_visit
         if payload.avg_budget is not None:
             destination.avg_budget = payload.avg_budget
+        if payload.duration_days is not None:
+            destination.duration_days = payload.duration_days
         if payload.tags is not None:
             destination.tags = payload.tags
 
@@ -140,38 +181,36 @@ class DestinationService(BaseService[DestinationRepository]):
         destination.soft_delete()
         await self.repository.update(destination)
 
-    async def upload_image(self, destination_id: UUID, file: UploadFile) -> DestinationResponse:
-        """Upload and attach an image to a destination (Admin only)."""
+    async def upload_image(
+        self, destination_id: UUID, file: UploadFile
+    ) -> DestinationResponse:
+        """Upload and attach a cover image to a destination (Admin only)."""
         logger.info("DestinationService.upload_image: id=%s", destination_id)
         destination = await self.repository.get_by_id(destination_id)
         if not destination or destination.is_deleted:
             raise ResourceNotFoundException("Destination not found.")
 
-        # Validate file extension
         allowed_extensions = {".jpg", ".jpeg", ".png", ".webp"}
         file_ext = Path(file.filename).suffix.lower() if file.filename else ""
         if file_ext not in allowed_extensions:
             raise ValidationException(
                 message="Invalid file type.",
-                detail=f"Allowed extensions are: {', '.join(allowed_extensions)}"
+                detail=f"Allowed extensions: {', '.join(allowed_extensions)}",
             )
 
-        # Generate safe filename and save to local disk
         filename = f"{destination_id}{file_ext}"
         file_path = UPLOAD_DIR / filename
-        
+
         try:
             with file_path.open("wb") as buffer:
                 shutil.copyfileobj(file.file, buffer)
-        except Exception as e:
-            logger.error("Failed to save image file: %s", e)
+        except Exception as exc:
+            logger.error("Failed to save image: %s", exc)
             raise BusinessRuleViolationException("Could not process the uploaded file.")
         finally:
             file.file.close()
 
-        # Update destination with the new relative URL
-        # We serve the `uploads` directory at the `/uploads` URL prefix in main.py
+        # We serve the uploads/ directory at /uploads in main.py.
         destination.image_url = f"/uploads/destinations/{filename}"
         updated = await self.repository.update(destination)
-        
         return DestinationResponse.model_validate(updated)

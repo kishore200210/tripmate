@@ -19,6 +19,8 @@ from app.modules.itineraries.schemas import (
     ItineraryItemResponse,
     ItineraryItemUpdateRequest,
     TimelineResponse,
+    ItineraryResponse,
+    AIGenerateRequest,
 )
 from app.modules.itineraries.service import ItineraryService
 from app.modules.trips.repository import TripRepository
@@ -51,6 +53,50 @@ async def get_timeline(
     service: ItineraryService = Depends(get_itinerary_service),
 ) -> TimelineResponse:
     return await ItineraryController.get_timeline(trip_id, service, current_user)
+
+@router.get(
+    "/ai-details",
+    response_model=ItineraryResponse,
+    summary="Get AI itinerary metadata",
+)
+async def get_ai_itinerary(
+    trip_id: UUID,
+    current_user: User = Depends(get_current_user),
+    service: ItineraryService = Depends(get_itinerary_service),
+) -> ItineraryResponse:
+    from fastapi import HTTPException
+    res = await ItineraryController.get_ai_itinerary(trip_id, service, current_user)
+    if not res:
+        raise HTTPException(status_code=404, detail="No AI itinerary generated for this trip.")
+    return res
+
+@router.post(
+    "/generate",
+    response_model=ItineraryResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Generate full AI itinerary",
+)
+async def generate_full_itinerary(
+    trip_id: UUID,
+    payload: AIGenerateRequest,
+    current_user: User = Depends(get_current_user),
+    service: ItineraryService = Depends(get_itinerary_service),
+) -> ItineraryResponse:
+    return await ItineraryController.generate_full_itinerary(trip_id, payload, service, current_user)
+
+@router.post(
+    "/generate/{day_no}",
+    response_model=ItineraryResponse,
+    summary="Regenerate single day plan",
+)
+async def regenerate_day_plan(
+    trip_id: UUID,
+    day_no: int,
+    payload: AIGenerateRequest,
+    current_user: User = Depends(get_current_user),
+    service: ItineraryService = Depends(get_itinerary_service),
+) -> ItineraryResponse:
+    return await ItineraryController.regenerate_day_plan(trip_id, day_no, payload, service, current_user)
 
 
 @router.post(

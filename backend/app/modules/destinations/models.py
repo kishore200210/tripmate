@@ -79,6 +79,15 @@ class Destination(Base, TimestampMixin, SoftDeleteMixin):
     # ARRAY(String): PostgreSQL native array for tags used by ML recommender.
     tags: Mapped[list[str] | None] = mapped_column(ARRAY(String), nullable=True)
 
+    # Specific city within the country (e.g., "Kyoto" within "Japan").
+    city: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
+    # Human-readable travel season, e.g. "March–May" or "Year-round".
+    best_time_to_visit: Mapped[str | None] = mapped_column(String(200), nullable=True)
+
+    # Recommended trip length in days.
+    duration_days: Mapped[int | None] = mapped_column(Integer, nullable=True)
+
     # Cloudinary URL for the destination hero image.
     image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 

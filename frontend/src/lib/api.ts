@@ -1,4 +1,5 @@
 import axios from "axios";
+import toast from "react-hot-toast";
 
 // Base API URL targeting the FastAPI backend
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
@@ -73,6 +74,20 @@ api.interceptors.response.use(
       }
     }
     
+    if (error.response?.status >= 500) {
+      if (typeof window !== "undefined") {
+        toast.error("An unexpected server error occurred. Please try again later.");
+      }
+    } else if (error.message === "Network Error") {
+      if (typeof window !== "undefined") {
+        toast.error("Unable to connect to the server. Please check your internet connection.");
+      }
+    } else if (error.code === "ECONNABORTED") {
+      if (typeof window !== "undefined") {
+        toast.error("Request timed out. Please try again.");
+      }
+    }
+
     return Promise.reject(error);
   }
 );

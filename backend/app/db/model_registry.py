@@ -29,11 +29,13 @@ from app.modules.destinations.models import (  # noqa: F401
     Document,
 )
 
-# Trips, ItineraryItems, Bookings
+# Trips, ItineraryItems, Bookings, Itinerary, DayPlan
 from app.modules.trips.models import (  # noqa: F401
     Trip,
     ItineraryItem,
     Booking,
+    Itinerary,
+    DayPlan,
 )
 
 # AI Concierge

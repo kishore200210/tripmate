@@ -39,6 +39,8 @@ def destination_service(mock_repository: AsyncMock) -> DestinationService:
     return DestinationService(repository=mock_repository)
 
 
+from datetime import datetime, timezone
+
 @pytest.fixture
 def sample_destination() -> Destination:
     dest = Destination()
@@ -50,6 +52,8 @@ def sample_destination() -> Destination:
     dest.tags = ["romantic", "history"]
     dest.image_url = None
     dest.is_deleted = False
+    dest.created_at = datetime.now(timezone.utc)
+    dest.updated_at = datetime.now(timezone.utc)
     return dest
 
 

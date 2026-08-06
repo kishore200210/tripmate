@@ -12,6 +12,8 @@ from app.modules.itineraries.schemas import (
     ItineraryItemResponse,
     ItineraryItemUpdateRequest,
     TimelineResponse,
+    ItineraryResponse,
+    AIGenerateRequest,
 )
 from app.modules.itineraries.service import ItineraryService
 from app.modules.users.models import User
@@ -25,6 +27,24 @@ class ItineraryController:
         trip_id: UUID, service: ItineraryService, current_user: User
     ) -> TimelineResponse:
         return await service.get_timeline(trip_id, current_user)
+
+    @staticmethod
+    async def get_ai_itinerary(
+        trip_id: UUID, service: ItineraryService, current_user: User
+    ) -> ItineraryResponse | None:
+        return await service.get_ai_itinerary(trip_id, current_user)
+
+    @staticmethod
+    async def generate_full_itinerary(
+        trip_id: UUID, payload: AIGenerateRequest, service: ItineraryService, current_user: User
+    ) -> ItineraryResponse:
+        return await service.generate_full_itinerary(trip_id, payload, current_user)
+
+    @staticmethod
+    async def regenerate_day_plan(
+        trip_id: UUID, day_no: int, payload: AIGenerateRequest, service: ItineraryService, current_user: User
+    ) -> ItineraryResponse:
+        return await service.regenerate_day_plan(trip_id, day_no, payload, current_user)
 
     @staticmethod
     async def add_item(

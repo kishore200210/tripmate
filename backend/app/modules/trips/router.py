@@ -49,12 +49,18 @@ def get_trip_service(db: AsyncSession = Depends(get_db)) -> TripService:
 async def list_trips(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
+    q: str | None = Query(None, description="Search term matching title or description"),
     trip_status: TripStatus | None = Query(None, description="Filter trips by status"),
     current_user: User = Depends(get_current_user),
     service: TripService = Depends(get_trip_service),
 ) -> TripPaginatedResponse:
     return await TripController.get_user_trips(
-        skip=skip, limit=limit, status=trip_status, service=service, current_user=current_user
+        skip=skip,
+        limit=limit,
+        status=trip_status,
+        query=q,
+        service=service,
+        current_user=current_user,
     )
 
 

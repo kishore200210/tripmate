@@ -7,7 +7,7 @@ Trip Repository — database access layer for trip operations.
 import logging
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.trips.enums import TripStatus
@@ -36,9 +36,14 @@ class TripRepository(BaseRepository[Trip]):
         return result.scalar_one_or_none()
 
     async def get_user_trips(
-        self, user_id: UUID, skip: int = 0, limit: int = 20, status: TripStatus | None = None
+        self,
+        user_id: UUID,
+        skip: int = 0,
+        limit: int = 20,
+        status: TripStatus | None = None,
+        query: str | None = None,
     ) -> tuple[list[Trip], int]:
-        """Fetch all trips for a specific user with optional status filtering."""
+        """Fetch all trips for a specific user with optional status and query text filtering."""
         stmt = select(Trip).where(
             Trip.user_id == user_id,
             Trip.is_deleted.is_(False),
@@ -51,6 +56,14 @@ class TripRepository(BaseRepository[Trip]):
         if status:
             stmt = stmt.where(Trip.status == status)
             count_stmt = count_stmt.where(Trip.status == status)
+
+        if query:
+            search_filter = or_(
+                Trip.title.ilike(f"%{query}%"),
+                Trip.description.ilike(f"%{query}%"),
+            )
+            stmt = stmt.where(search_filter)
+            count_stmt = count_stmt.where(search_filter)
 
         # Order by start date
         stmt = stmt.order_by(Trip.start_date.asc().nulls_last())

@@ -25,6 +25,8 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
+
 
 from app.core.config import get_settings
 from app.core.exceptions import (
@@ -157,6 +159,18 @@ def create_application() -> FastAPI:
     async def external_service_handler(request: Request, exc: ExternalServiceException) -> JSONResponse:
         logger.error("503 External Service: %s | path=%s", exc.message, request.url.path)
         return JSONResponse(status_code=503, content={"error": {"message": exc.message, "detail": exc.detail}})
+
+    @application.exception_handler(RequestValidationError)
+    async def fast_api_validation_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
+        logger.warning("422 Unprocessable Entity | path=%s", request.url.path)
+        return JSONResponse(status_code=422, content={"error": {"message": "Validation Error", "detail": exc.errors()}})
+
+    @application.exception_handler(Exception)
+    async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+        logger.exception("500 Internal Server Error | path=%s", request.url.path)
+        msg = "An unexpected error occurred." if not settings.DEBUG else str(exc)
+        return JSONResponse(status_code=500, content={"error": {"message": msg, "detail": None}})
+
 
     # ── Router Registration ────────────────────────────────
     # System routes (health check) — MVC: extracted to core/router.py

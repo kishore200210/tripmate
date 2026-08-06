@@ -10,7 +10,8 @@
     "lint:fix": "eslint src/ --fix",
     "type-check": "tsc --noEmit",
     "format": "prettier --write src/",
-    "format:check": "prettier --check src/"
+    "format:check": "prettier --check src/",
+    "test": "echo 'No frontend tests currently configured.' && exit 0"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",

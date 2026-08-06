@@ -42,7 +42,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base, TimestampMixin, SoftDeleteMixin
 from app.modules.trips.enums import BookingStatus, BookingType, TripStatus
 
-__all__ = ["Trip", "ItineraryItem", "Booking"]
+__all__ = ["Trip", "Itinerary", "DayPlan", "ItineraryItem", "Booking"]
 
 
 class Trip(Base, TimestampMixin, SoftDeleteMixin):
@@ -129,6 +129,14 @@ class Trip(Base, TimestampMixin, SoftDeleteMixin):
         passive_deletes=True,
         order_by="ItineraryItem.day_no, ItineraryItem.scheduled_time",
     )
+    itinerary: Mapped["Itinerary | None"] = relationship(
+        "Itinerary",
+        back_populates="trip",
+        cascade="all, delete-orphan",
+        lazy="raise",
+        passive_deletes=True,
+        uselist=False,
+    )
     bookings: Mapped[list["Booking"]] = relationship(
         "Booking",
         back_populates="trip",
@@ -139,6 +147,62 @@ class Trip(Base, TimestampMixin, SoftDeleteMixin):
 
     def __repr__(self) -> str:
         return f"<Trip id={self.id} title={self.title} status={self.status.value}>"
+
+
+class Itinerary(Base, TimestampMixin, SoftDeleteMixin):
+    """
+    AI-generated Itinerary metadata for a Trip.
+    """
+    __tablename__ = "itineraries"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    trip_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("trips.id", ondelete="CASCADE"), nullable=False, unique=True, index=True
+    )
+
+    budget_estimate: Mapped[str | None] = mapped_column(Text, nullable=True)
+    packing_checklist: Mapped[str | None] = mapped_column(Text, nullable=True)
+    restaurant_recommendations: Mapped[str | None] = mapped_column(Text, nullable=True)
+    local_attractions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    weather_suggestions: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    trip: Mapped["Trip"] = relationship("Trip", back_populates="itinerary", lazy="raise")
+    day_plans: Mapped[list["DayPlan"]] = relationship(
+        "DayPlan",
+        back_populates="itinerary",
+        cascade="all, delete-orphan",
+        lazy="raise",
+        passive_deletes=True,
+        order_by="DayPlan.day_no"
+    )
+
+    def __repr__(self) -> str:
+        return f"<Itinerary id={self.id} trip_id={self.trip_id}>"
+
+
+class DayPlan(Base, TimestampMixin, SoftDeleteMixin):
+    """
+    AI-generated theme and description for a specific day in an Itinerary.
+    """
+    __tablename__ = "day_plans"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    itinerary_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("itineraries.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    day_no: Mapped[int] = mapped_column(Integer, nullable=False)
+    theme: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[str] = mapped_column(Text, nullable=False)
+
+    itinerary: Mapped["Itinerary"] = relationship("Itinerary", back_populates="day_plans", lazy="raise")
+
+    __table_args__ = (
+        CheckConstraint("day_no >= 1", name="ck_dayplan_day_no_positive"),
+        Index("idx_dayplan_itinerary_day", "itinerary_id", "day_no", unique=True),
+    )
+
+    def __repr__(self) -> str:
+        return f"<DayPlan id={self.id} day_no={self.day_no}>"
 
 
 class ItineraryItem(Base, TimestampMixin, SoftDeleteMixin):

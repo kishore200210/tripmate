@@ -173,3 +173,120 @@ class TestItineraryServiceDelete:
 
         assert sample_itinerary_item.is_deleted is True
         mock_itinerary_repository.update.assert_called_once()
+
+
+from unittest.mock import patch
+from app.modules.itineraries.schemas import AIGenerateRequest, ItineraryResponse
+
+class TestItineraryServiceGenerate:
+    @pytest.mark.asyncio
+    @patch("app.modules.itineraries.service.ItineraryGenerator")
+    async def test_generate_full_itinerary_success(
+        self,
+        mock_generator_class,
+        itinerary_service: ItineraryService,
+        mock_trip_repository: AsyncMock,
+        mock_itinerary_repository: AsyncMock,
+        sample_user: User,
+        sample_trip: Trip,
+    ) -> None:
+        mock_trip_repository.get_user_trip.return_value = sample_trip
+        mock_generator_instance = mock_generator_class.return_value
+        mock_generator_instance.generate_itinerary = AsyncMock(return_value={
+            "budget_estimate": "1000",
+            "packing_checklist": ["Item 1"],
+            "restaurant_recommendations": ["Rest 1"],
+            "local_attractions": ["Attr 1"],
+            "weather_suggestions": "Sunny",
+            "day_plans": [
+                {
+                    "day_no": 1,
+                    "theme": "Arrival",
+                    "description": "Arrive and rest",
+                    "activities": [
+                        {
+                            "activity": "Check-in",
+                            "scheduled_time": "14:00:00",
+                            "notes": "",
+                            "location": "Hotel"
+                        }
+                    ]
+                }
+            ]
+        })
+        
+        mock_itinerary_repository.db = AsyncMock()
+        
+        mock_itinerary = ItineraryResponse(
+            id=uuid.uuid4(),
+            trip_id=sample_trip.id,
+            budget_estimate="1000",
+            packing_checklist='["Item 1"]',
+            restaurant_recommendations='["Rest 1"]',
+            local_attractions='["Attr 1"]',
+            weather_suggestions="Sunny",
+            day_plans=[]
+        )
+        with patch.object(itinerary_service, "get_ai_itinerary", return_value=mock_itinerary):
+            payload = AIGenerateRequest(preferences="Relaxing")
+            result = await itinerary_service.generate_full_itinerary(sample_trip.id, payload, sample_user)
+            
+            assert result.budget_estimate == "1000"
+            mock_generator_instance.generate_itinerary.assert_called_once()
+            mock_itinerary_repository.db.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    @patch("app.modules.itineraries.service.ItineraryGenerator")
+    async def test_regenerate_day_plan_success(
+        self,
+        mock_generator_class,
+        itinerary_service: ItineraryService,
+        mock_trip_repository: AsyncMock,
+        mock_itinerary_repository: AsyncMock,
+        sample_user: User,
+        sample_trip: Trip,
+    ) -> None:
+        mock_trip_repository.get_user_trip.return_value = sample_trip
+        mock_generator_instance = mock_generator_class.return_value
+        mock_generator_instance.regenerate_day = AsyncMock(return_value={
+            "theme": "New Theme",
+            "description": "New Desc",
+            "activities": []
+        })
+        
+        mock_itinerary_repository.db = AsyncMock()
+        
+        # Mock the db.scalar calls for finding Itinerary and DayPlan
+        from app.modules.trips.models import Itinerary, DayPlan
+        mock_itinerary_db = Itinerary(id=uuid.uuid4(), trip_id=sample_trip.id)
+        mock_day_plan_db = DayPlan(id=uuid.uuid4(), itinerary_id=mock_itinerary_db.id, day_no=1, theme="Old", description="Old")
+        
+        # side_effect for db.scalar
+        async def mock_scalar_side_effect(stmt):
+            stmt_str = str(stmt).lower()
+            if "day_plans" in stmt_str:
+                return mock_day_plan_db
+            elif "itineraries" in stmt_str:
+                return mock_itinerary_db
+            return None
+            
+        mock_itinerary_repository.db.scalar.side_effect = mock_scalar_side_effect
+        
+        mock_itinerary_resp = ItineraryResponse(
+            id=mock_itinerary_db.id,
+            trip_id=sample_trip.id,
+            budget_estimate="1000",
+            packing_checklist=None,
+            restaurant_recommendations=None,
+            local_attractions=None,
+            weather_suggestions=None,
+            day_plans=[]
+        )
+        with patch.object(itinerary_service, "get_ai_itinerary", return_value=mock_itinerary_resp):
+            payload = AIGenerateRequest(preferences="Fun")
+            result = await itinerary_service.regenerate_day_plan(sample_trip.id, 1, payload, sample_user)
+            
+            assert result.id == mock_itinerary_db.id
+            mock_generator_instance.regenerate_day.assert_called_once()
+            mock_itinerary_repository.db.commit.assert_called_once()
+

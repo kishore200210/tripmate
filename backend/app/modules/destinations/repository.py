@@ -5,7 +5,6 @@ Destination Repository — advanced database querying including search, filter, 
 """
 
 import logging
-from typing import Any
 from uuid import UUID
 
 from sqlalchemy import func, or_, select
@@ -18,9 +17,7 @@ logger = logging.getLogger(__name__)
 
 
 class DestinationRepository(BaseRepository[Destination]):
-    """
-    Repository for destination-specific database queries.
-    """
+    """Repository for destination-specific database queries."""
 
     def __init__(self, db: AsyncSession) -> None:
         super().__init__(model=Destination, db=db)
@@ -37,11 +34,13 @@ class DestinationRepository(BaseRepository[Destination]):
         include_inactive: bool = False,
     ) -> tuple[list[Destination], int]:
         """
-        Advanced search with pagination, filtering, and sorting.
-        Returns a tuple of (items, total_count).
+        Advanced search with text query, country filter, tag filter, sorting, and pagination.
+        Returns a (items, total_count) tuple — total reflects the filtered count, not the page size.
         """
         stmt = select(Destination).where(Destination.is_deleted.is_(False))
-        count_stmt = select(func.count(Destination.id)).where(Destination.is_deleted.is_(False))
+        count_stmt = select(func.count(Destination.id)).where(
+            Destination.is_deleted.is_(False)
+        )
 
         if query:
             search_filter = or_(
@@ -57,19 +56,16 @@ class DestinationRepository(BaseRepository[Destination]):
             count_stmt = count_stmt.where(country_filter)
 
         if tag:
-            # PostgreSQL specific ARRAY ANY operation
+            # PostgreSQL ARRAY ANY — matches destinations where tags contains the value.
             tag_filter = Destination.tags.any(tag)
             stmt = stmt.where(tag_filter)
             count_stmt = count_stmt.where(tag_filter)
 
-        # Apply sorting
+        # Sort — column validated by service layer to prevent injection.
         sort_column = getattr(Destination, sort_by, Destination.name)
-        if sort_desc:
-            stmt = stmt.order_by(sort_column.desc())
-        else:
-            stmt = stmt.order_by(sort_column.asc())
+        stmt = stmt.order_by(sort_column.desc() if sort_desc else sort_column.asc())
 
-        # Apply pagination
+        # Paginate.
         stmt = stmt.offset(skip).limit(limit)
 
         items_result = await self.db.execute(stmt)
@@ -81,13 +77,20 @@ class DestinationRepository(BaseRepository[Destination]):
         return items, total
 
     async def name_exists(self, name: str, exclude_id: UUID | None = None) -> bool:
-        """Check if a destination with this exact name already exists."""
+        """Check if a destination with this exact name already exists (case-insensitive)."""
         stmt = select(Destination.id).where(
             Destination.name.ilike(name.strip()),
-            Destination.is_deleted.is_(False)
+            Destination.is_deleted.is_(False),
         )
         if exclude_id:
             stmt = stmt.where(Destination.id != exclude_id)
-            
         result = await self.db.execute(stmt)
         return result.scalar_one_or_none() is not None
+
+    async def get_count(self) -> int:
+        """Return the total count of active (non-deleted) destinations. Used by dashboard."""
+        stmt = select(func.count(Destination.id)).where(
+            Destination.is_deleted.is_(False)
+        )
+        result = await self.db.execute(stmt)
+        return result.scalar_one() or 0
