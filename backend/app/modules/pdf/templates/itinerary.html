@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ trip.name }} - Itinerary</title>
+    <style>
+        body {
+            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .header-info {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 30px;
+        }
+        .header-info p {
+            margin: 5px 0;
+            font-weight: bold;
+        }
+        .day-section {
+            margin-bottom: 30px;
+            page-break-inside: avoid;
+        }
+        .day-header {
+            background-color: #3498db;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .item-card {
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+        }
+        .item-time {
+            color: #7f8c8d;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        .item-title {
+            font-size: 1.2em;
+            margin: 5px 0;
+            color: #2c3e50;
+        }
+        .item-notes {
+            color: #555;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <h1>{{ trip.name }}</h1>
+    
+    <div class="header-info">
+        <p><strong>Dates:</strong> {{ trip.start_date }} to {{ trip.end_date }}</p>
+        <p><strong>Status:</strong> {{ trip.status }}</p>
+        <p><strong>Total Budget:</strong> ${{ trip.total_budget }}</p>
+    </div>
+
+    {% if grouped_items %}
+        {% for day, items in grouped_items.items() %}
+        <div class="day-section">
+            <h2 class="day-header">Day {{ day }}</h2>
+            
+            {% for item in items %}
+            <div class="item-card">
+                <div class="item-time">
+                    {{ item.scheduled_time.strftime('%I:%M %p') if item.scheduled_time else 'Anytime' }}
+                </div>
+                <h3 class="item-title">{{ item.activity_title }}</h3>
+                
+                {% if item.location %}
+                <p class="item-notes">📍 {{ item.location }}</p>
+                {% endif %}
+                
+                {% if item.notes %}
+                <p class="item-notes">{{ item.notes }}</p>
+                {% endif %}
+                
+                {% if item.estimated_cost %}
+                <p class="item-notes">💰 Estimated Cost: ${{ item.estimated_cost }}</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+        {% endfor %}
+    {% else %}
+        <p>No itinerary items planned yet.</p>
+    {% endif %}
+
+</body>
+</html>

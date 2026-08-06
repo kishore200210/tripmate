@@ -89,7 +89,7 @@ class Trip(Base, TimestampMixin, SoftDeleteMixin):
     status: Mapped[TripStatus] = mapped_column(
         SAEnum(TripStatus, name="trip_status", create_constraint=True),
         default=TripStatus.PLANNING,
-        server_default=TripStatus.PLANNING.value,
+        server_default=TripStatus.PLANNING.name,
         nullable=False,
         index=True,
     )
@@ -236,7 +236,7 @@ class Booking(Base, TimestampMixin, SoftDeleteMixin):
     status: Mapped[BookingStatus] = mapped_column(
         SAEnum(BookingStatus, name="booking_status", create_constraint=True),
         default=BookingStatus.PENDING,
-        server_default=BookingStatus.PENDING.value,
+        server_default=BookingStatus.PENDING.name,
         nullable=False,
         index=True,
     )

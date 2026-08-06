@@ -1,69 +1,87 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Plane, Compass, FileText, Bot } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
+    <div className="min-h-screen bg-neutral-50 flex flex-col font-sans">
+      <header className="px-6 py-4 flex items-center justify-between border-b bg-white">
+        <div className="flex items-center gap-2 text-2xl font-bold text-neutral-900">
+          <Plane className="w-8 h-8 text-blue-600" />
+          TripMate
+        </div>
+        <nav className="flex gap-4">
+          <Link href="/login">
+            <Button variant="ghost">Log In</Button>
+          </Link>
+          <Link href="/signup">
+            <Button>Sign Up</Button>
+          </Link>
+        </nav>
+      </header>
+
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="px-6 py-24 text-center max-w-4xl mx-auto">
+          <h1 className="text-5xl font-extrabold text-neutral-900 mb-6 tracking-tight">
+            Plan your next adventure with the power of AI.
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+          <p className="text-xl text-neutral-600 mb-10 max-w-2xl mx-auto">
+            TripMate is your all-in-one travel concierge. Generate itineraries, analyze landmarks, and manage bookings seamlessly.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
+          <div className="flex gap-4 justify-center">
+            <Link href="/signup">
+              <Button size="lg" className="text-lg px-8">Get Started</Button>
+            </Link>
+            <Link href="/destinations">
+              <Button size="lg" variant="outline" className="text-lg px-8">Browse Destinations</Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Features Section */}
+        <section className="bg-white py-24 px-6 border-t">
+          <div className="max-w-6xl mx-auto">
+            <h2 className="text-3xl font-bold text-center mb-12">Everything you need for the perfect trip</h2>
+            <div className="grid md:grid-cols-3 gap-8">
+              <Card className="border-neutral-200 shadow-sm">
+                <CardContent className="pt-6">
+                  <div className="w-12 h-12 bg-blue-100 text-blue-600 rounded-lg flex items-center justify-center mb-4">
+                    <Compass className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">Smart Recommendations</h3>
+                  <p className="text-neutral-600">Discover destinations tailored to your budget and climate preferences using our ML-powered engine.</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-neutral-200 shadow-sm">
+                <CardContent className="pt-6">
+                  <div className="w-12 h-12 bg-purple-100 text-purple-600 rounded-lg flex items-center justify-center mb-4">
+                    <Bot className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">AI Concierge</h3>
+                  <p className="text-neutral-600">Chat with a dedicated AI assistant that has deep context about your trips and can fetch live weather.</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-neutral-200 shadow-sm">
+                <CardContent className="pt-6">
+                  <div className="w-12 h-12 bg-red-100 text-red-600 rounded-lg flex items-center justify-center mb-4">
+                    <FileText className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">PDF Itineraries</h3>
+                  <p className="text-neutral-600">Instantly generate beautifully formatted PDFs of your entire itinerary, processed securely in the background.</p>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </section>
       </main>
+
+      <footer className="py-8 text-center text-neutral-500 text-sm border-t bg-white">
+        &copy; {new Date().getFullYear()} TripMate Capstone. All rights reserved.
+      </footer>
     </div>
   );
 }

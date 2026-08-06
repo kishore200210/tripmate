@@ -38,7 +38,7 @@ TestSessionLocal = async_sessionmaker(
 )
 
 
-@pytest_asyncio.fixture(scope="session", autouse=True)
+@pytest_asyncio.fixture(scope="session")
 async def create_test_tables():
     """Create all tables in the test database once per session."""
     async with test_engine.begin() as conn:

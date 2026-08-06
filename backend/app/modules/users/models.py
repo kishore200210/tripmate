@@ -79,7 +79,7 @@ class User(Base, TimestampMixin, SoftDeleteMixin):
     role: Mapped[UserRole] = mapped_column(
         SAEnum(UserRole, name="user_role", create_constraint=True),
         default=UserRole.USER,
-        server_default=UserRole.USER.value,  # DB-level default
+        server_default=UserRole.USER.name,  # DB-level default
         nullable=False,
         index=True,
     )

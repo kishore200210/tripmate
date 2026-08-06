@@ -15,7 +15,7 @@ Engineering Principles:
 """
 
 from functools import lru_cache
-from pydantic import PostgresDsn, computed_field
+from pydantic import PostgresDsn, computed_field, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -55,6 +55,11 @@ class Settings(BaseSettings):
         )
 
     # ── Redis ─────────────────────────────────────────────
+    ML_SERVICE_URL: str = Field(default="http://localhost:8001")
+    
+    # Observability
+    SENTRY_DSN: str | None = None
+    LOGFIRE_TOKEN: str | None = None
     REDIS_URL: str = "redis://localhost:6379/0"
 
     # ── Security (JWT) ─────────────────────────────────────

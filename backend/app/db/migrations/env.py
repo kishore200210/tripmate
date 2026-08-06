@@ -47,6 +47,10 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection) -> None:  # type: ignore[no-untyped-def]
+    print("DEBUG: Inside do_run_migrations")
+    print(f"DEBUG: target_metadata tables = {target_metadata.tables.keys()}")
+    print(f"DEBUG: Executing do_run_migrations")
+    
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
@@ -54,13 +58,17 @@ def do_run_migrations(connection) -> None:  # type: ignore[no-untyped-def]
         compare_server_default=True,
     )
     with context.begin_transaction():
+        print(f"DEBUG: Migration context configured. Current revision: {context.get_context().get_current_revision()}")
         context.run_migrations()
+        print("DEBUG: context.run_migrations() completed")
 
 
 async def run_async_migrations() -> None:
     """Run migrations using an async engine connection (required for psycopg v3)."""
     connectable = create_async_engine(settings.DATABASE_URL)
-    async with connectable.connect() as connection:
+    print(f"DEBUG: DATABASE_URL = {settings.DATABASE_URL}")
+    print(f"DEBUG: Base.metadata tables = {list(Base.metadata.tables.keys())}")
+    async with connectable.begin() as connection:
         await connection.run_sync(do_run_migrations)
     await connectable.dispose()
 
