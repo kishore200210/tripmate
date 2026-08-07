@@ -1,0 +1,101 @@
+destination_id,name,budget,climate,activity_level
+dest_0,"Paris, France - Variant 0",3,5,1
+dest_1,"Tokyo, Japan - Variant 1",1,2,2
+dest_2,"Bali, Indonesia - Variant 2",4,1,5
+dest_3,"New York, USA - Variant 3",4,3,2
+dest_4,"Rome, Italy - Variant 4",3,5,4
+dest_5,"Sydney, Australia - Variant 5",5,2,3
+dest_6,"Cape Town, South Africa - Variant 6",1,5,1
+dest_7,"Rio de Janeiro, Brazil - Variant 7",3,5,5
+dest_8,"Kyoto, Japan - Variant 8",4,3,5
+dest_9,"London, UK - Variant 9",1,4,3
+dest_10,"Bangkok, Thailand - Variant 10",5,1,3
+dest_11,"Dubai, UAE - Variant 11",1,3,3
+dest_12,"Machu Picchu, Peru - Variant 12",4,4,1
+dest_13,"Santorini, Greece - Variant 13",3,2,3
+dest_14,"Paris, France - Variant 14",4,2,1
+dest_15,"Tokyo, Japan - Variant 15",1,5,4
+dest_16,"Bali, Indonesia - Variant 16",4,5,4
+dest_17,"New York, USA - Variant 17",5,5,1
+dest_18,"Rome, Italy - Variant 18",1,5,5
+dest_19,"Sydney, Australia - Variant 19",3,1,5
+dest_20,"Cape Town, South Africa - Variant 20",4,2,2
+dest_21,"Rio de Janeiro, Brazil - Variant 21",4,4,4
+dest_22,"Kyoto, Japan - Variant 22",4,2,3
+dest_23,"London, UK - Variant 23",3,4,3
+dest_24,"Bangkok, Thailand - Variant 24",4,5,4
+dest_25,"Dubai, UAE - Variant 25",5,4,3
+dest_26,"Machu Picchu, Peru - Variant 26",3,1,5
+dest_27,"Santorini, Greece - Variant 27",2,1,2
+dest_28,"Paris, France - Variant 28",3,1,5
+dest_29,"Tokyo, Japan - Variant 29",5,3,4
+dest_30,"Bali, Indonesia - Variant 30",5,2,3
+dest_31,"New York, USA - Variant 31",5,5,3
+dest_32,"Rome, Italy - Variant 32",4,1,2
+dest_33,"Sydney, Australia - Variant 33",2,3,2
+dest_34,"Cape Town, South Africa - Variant 34",3,3,3
+dest_35,"Rio de Janeiro, Brazil - Variant 35",5,3,5
+dest_36,"Kyoto, Japan - Variant 36",4,3,4
+dest_37,"London, UK - Variant 37",1,5,5
+dest_38,"Bangkok, Thailand - Variant 38",5,1,4
+dest_39,"Dubai, UAE - Variant 39",3,2,4
+dest_40,"Machu Picchu, Peru - Variant 40",1,2,4
+dest_41,"Santorini, Greece - Variant 41",1,4,5
+dest_42,"Paris, France - Variant 42",4,5,3
+dest_43,"Tokyo, Japan - Variant 43",3,5,1
+dest_44,"Bali, Indonesia - Variant 44",2,2,3
+dest_45,"New York, USA - Variant 45",4,3,3
+dest_46,"Rome, Italy - Variant 46",3,5,4
+dest_47,"Sydney, Australia - Variant 47",2,2,1
+dest_48,"Cape Town, South Africa - Variant 48",5,1,1
+dest_49,"Rio de Janeiro, Brazil - Variant 49",1,5,1
+dest_50,"Kyoto, Japan - Variant 50",1,3,3
+dest_51,"London, UK - Variant 51",2,4,3
+dest_52,"Bangkok, Thailand - Variant 52",2,3,3
+dest_53,"Dubai, UAE - Variant 53",5,3,2
+dest_54,"Machu Picchu, Peru - Variant 54",4,5,1
+dest_55,"Santorini, Greece - Variant 55",2,2,3
+dest_56,"Paris, France - Variant 56",3,2,1
+dest_57,"Tokyo, Japan - Variant 57",3,4,2
+dest_58,"Bali, Indonesia - Variant 58",3,4,3
+dest_59,"New York, USA - Variant 59",5,1,3
+dest_60,"Rome, Italy - Variant 60",2,1,4
+dest_61,"Sydney, Australia - Variant 61",1,1,5
+dest_62,"Cape Town, South Africa - Variant 62",4,4,1
+dest_63,"Rio de Janeiro, Brazil - Variant 63",2,2,5
+dest_64,"Kyoto, Japan - Variant 64",5,4,5
+dest_65,"London, UK - Variant 65",5,4,5
+dest_66,"Bangkok, Thailand - Variant 66",5,4,4
+dest_67,"Dubai, UAE - Variant 67",3,3,4
+dest_68,"Machu Picchu, Peru - Variant 68",4,4,4
+dest_69,"Santorini, Greece - Variant 69",2,3,1
+dest_70,"Paris, France - Variant 70",3,5,1
+dest_71,"Tokyo, Japan - Variant 71",2,5,5
+dest_72,"Bali, Indonesia - Variant 72",1,1,2
+dest_73,"New York, USA - Variant 73",2,1,4
+dest_74,"Rome, Italy - Variant 74",3,4,1
+dest_75,"Sydney, Australia - Variant 75",2,3,2
+dest_76,"Cape Town, South Africa - Variant 76",4,1,1
+dest_77,"Rio de Janeiro, Brazil - Variant 77",2,3,2
+dest_78,"Kyoto, Japan - Variant 78",2,4,3
+dest_79,"London, UK - Variant 79",4,2,4
+dest_80,"Bangkok, Thailand - Variant 80",4,5,5
+dest_81,"Dubai, UAE - Variant 81",5,4,4
+dest_82,"Machu Picchu, Peru - Variant 82",3,1,2
+dest_83,"Santorini, Greece - Variant 83",2,1,2
+dest_84,"Paris, France - Variant 84",5,3,2
+dest_85,"Tokyo, Japan - Variant 85",2,4,3
+dest_86,"Bali, Indonesia - Variant 86",4,1,3
+dest_87,"New York, USA - Variant 87",4,3,2
+dest_88,"Rome, Italy - Variant 88",4,1,3
+dest_89,"Sydney, Australia - Variant 89",2,3,2
+dest_90,"Cape Town, South Africa - Variant 90",3,4,3
+dest_91,"Rio de Janeiro, Brazil - Variant 91",3,3,4
+dest_92,"Kyoto, Japan - Variant 92",4,5,1
+dest_93,"London, UK - Variant 93",4,3,3
+dest_94,"Bangkok, Thailand - Variant 94",2,5,4
+dest_95,"Dubai, UAE - Variant 95",5,4,4
+dest_96,"Machu Picchu, Peru - Variant 96",5,4,5
+dest_97,"Santorini, Greece - Variant 97",2,1,1
+dest_98,"Paris, France - Variant 98",1,5,1
+dest_99,"Tokyo, Japan - Variant 99",1,1,5
