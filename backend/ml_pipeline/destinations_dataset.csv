@@ -1,0 +1,31 @@
+Destination,Country,Budget_Per_Day_USD,Climate,Best_Season,Travel_Style,Average_Duration_Days,Family_Friendly_Score,Adventure_Score,Luxury_Score
+Kerala,India,40,Tropical,Winter,Relaxation,7,9,6,7
+Bali,Indonesia,45,Tropical,Summer,Relaxation,10,8,8,6
+Maldives,Maldives,250,Tropical,Winter,Relaxation,5,6,5,10
+Goa,India,35,Tropical,Winter,Relaxation,5,7,7,5
+Phuket,Thailand,50,Tropical,Winter,Relaxation,7,8,7,6
+Tokyo,Japan,120,Temperate,Spring,City,10,9,4,8
+Kyoto,Japan,110,Temperate,Fall,Cultural,5,8,3,7
+Paris,France,150,Temperate,Spring,City,7,7,2,9
+Rome,Italy,130,Mediterranean,Spring,Cultural,7,8,2,8
+Swiss Alps,Switzerland,200,Cold,Winter,Adventure,7,9,10,9
+New York,USA,180,Temperate,Fall,City,7,8,3,8
+Reykjavik,Iceland,160,Cold,Summer,Adventure,8,7,10,6
+Cape Town,South Africa,80,Mediterranean,Summer,Adventure,10,8,9,7
+Dubai,UAE,140,Arid,Winter,City,5,9,6,10
+Santorini,Greece,130,Mediterranean,Summer,Relaxation,5,6,4,9
+Banff,Canada,120,Cold,Summer,Adventure,7,9,10,7
+Machu Picchu,Peru,60,Temperate,Fall,Cultural,8,5,10,3
+Sydney,Australia,140,Temperate,Summer,City,10,9,7,7
+Cairo,Egypt,50,Arid,Winter,Cultural,5,7,6,5
+Rio de Janeiro,Brazil,70,Tropical,Summer,City,7,6,8,5
+Bangkok,Thailand,45,Tropical,Winter,City,5,7,5,6
+Istanbul,Turkey,60,Mediterranean,Spring,Cultural,7,8,4,6
+London,UK,160,Temperate,Summer,City,7,9,2,8
+Barcelona,Spain,110,Mediterranean,Spring,City,6,8,4,7
+Queenstown,New Zealand,130,Temperate,Summer,Adventure,10,8,10,8
+Amalfi Coast,Italy,150,Mediterranean,Summer,Relaxation,7,6,3,9
+Petra,Jordan,70,Arid,Spring,Cultural,4,6,8,4
+Maui,USA,200,Tropical,Summer,Relaxation,7,9,7,9
+Prague,Czech Republic,80,Temperate,Spring,Cultural,5,8,2,6
+Marrakech,Morocco,60,Arid,Spring,Cultural,5,7,7,7

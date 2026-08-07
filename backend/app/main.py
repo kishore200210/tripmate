@@ -72,16 +72,23 @@ else:
 
 # ── Lifespan ──────────────────────────────────────────────
 
+from app.modules.recommendations.model_loader import ModelLoader
+from app.modules.computer_vision.model_loader import YoloModelLoader
+
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """
     Handles application startup and shutdown events.
-    Startup: log configuration summary, validate connections.
+    Startup: log configuration summary, validate connections, load ML model.
     Shutdown: cleanly release resources.
     """
     logger.info("🚀 %s v%s starting up...", settings.APP_NAME, settings.APP_VERSION)
     logger.info("   Environment : %s", settings.APP_ENV)
     logger.info("   Debug Mode  : %s", settings.DEBUG)
+    
+    ModelLoader.load()
+    YoloModelLoader.load()
+    
     yield
     logger.info("🛑 %s shutting down cleanly.", settings.APP_NAME)
 
@@ -198,6 +205,8 @@ def create_application() -> FastAPI:
     from app.modules.pdf.router import router as pdf_router
     from app.modules.vision.router import router as vision_router
     from app.modules.places.router import router as places_router
+    from app.modules.recommendations.router import router as recommendations_router
+    from app.modules.computer_vision.router import router as computer_vision_router
     
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(users_router, prefix="/api/v1")
@@ -212,10 +221,16 @@ def create_application() -> FastAPI:
     application.include_router(pdf_router, prefix="/api/v1")
     application.include_router(vision_router, prefix="/api/v1")
     application.include_router(places_router, prefix="/api/v1")
+    application.include_router(recommendations_router, prefix="/api/v1")
+    application.include_router(computer_vision_router, prefix="/api/v1")
 
     # Serve uploaded static files
     os.makedirs("uploads", exist_ok=True)
     application.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+    
+    # Serve static files (like PDFs)
+    os.makedirs("static/pdfs", exist_ok=True)
+    application.mount("/static", StaticFiles(directory="static"), name="static")
 
     return application
 

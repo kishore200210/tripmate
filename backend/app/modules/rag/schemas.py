@@ -32,3 +32,14 @@ class SearchResult(BaseModel):
     source_file: str | None
     chunk_index: int
     score: float = Field(..., description="Cosine similarity or L2 distance score.")
+
+
+class RAGQueryRequest(BaseModel):
+    """Schema for POST /api/v1/rag/query"""
+    query: str = Field(..., min_length=2, max_length=1000, description="The user's question about destinations.")
+
+
+class RAGQueryResponse(BaseModel):
+    """Response schema for the grounded answer."""
+    answer: str
+    sources: list[str]

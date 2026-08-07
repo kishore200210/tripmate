@@ -1,24 +1,17 @@
 """
 tests/unit/rag/test_rag_service.py
 
-Unit tests for RAGService with mocked OpenAI embeddings.
+Unit tests for the new RAGService implementation.
 """
-
-import os
 import uuid
 from unittest.mock import AsyncMock, patch, MagicMock
-
 import pytest
 
-import app.db.model_registry  # noqa: F401
-from app.core.exceptions import ResourceNotFoundException, ValidationException
-from app.modules.destinations.models import Destination, Document
+from app.modules.destinations.models import Destination
 from app.modules.destinations.repository import DestinationRepository
 from app.modules.rag.repository import DocumentRepository
-from app.modules.rag.schemas import IngestRequest, SearchRequest
+from app.modules.rag.schemas import RAGQueryRequest, RAGQueryResponse
 from app.modules.rag.service import RAGService
-from app.modules.users.enums import UserRole
-from app.modules.users.models import User
 
 
 @pytest.fixture
@@ -37,145 +30,72 @@ def mock_dest_repository() -> AsyncMock:
 def rag_service(
     mock_document_repository: AsyncMock, mock_dest_repository: AsyncMock
 ) -> RAGService:
-    # Patch AsyncOpenAI internally
-    with patch("app.core.embeddings.AsyncOpenAI") as mock_openai_cls:
-        mock_openai_instance = MagicMock()
-        mock_openai_cls.return_value = mock_openai_instance
-        
-        service = RAGService(
-            repository=mock_document_repository,
-            destination_repository=mock_dest_repository,
-        )
-        return service
+    service = RAGService(
+        repository=mock_document_repository,
+        destination_repository=mock_dest_repository,
+    )
+    # Mock groq client
+    service.groq_client = AsyncMock()
+    # Mock embeddings
+    service.embedding_service = AsyncMock()
+    # Mock retriever
+    service.retriever = AsyncMock()
+    return service
 
 
-@pytest.fixture
-def sample_admin() -> User:
-    user = User()
-    user.id = uuid.uuid4()
-    user.role = UserRole.ADMIN
-    return user
-
-
-@pytest.fixture
-def sample_destination() -> Destination:
-    dest = Destination()
-    dest.id = uuid.uuid4()
-    dest.is_deleted = False
-    return dest
-
-
-class TestRAGServiceIngest:
+class TestRAGService:
     @pytest.mark.asyncio
-    async def test_chunk_markdown_logic(self, rag_service: RAGService) -> None:
-        content = "Para 1\n\nPara 2\n\nPara 3"
-        chunks = rag_service._chunk_markdown(content, max_chunk_size=10)
-        # "Para 1" is 6 chars, "Para 2" is 6 chars, so they split
-        assert len(chunks) == 3
-        assert chunks[0] == "Para 1"
-
-    @pytest.mark.asyncio
-    async def test_ingest_markdown_success(
+    async def test_query_knowledge_base_success(
         self,
         rag_service: RAGService,
-        mock_document_repository: AsyncMock,
-        mock_dest_repository: AsyncMock,
-        sample_admin: User,
-        sample_destination: Destination,
-        tmp_path,
     ) -> None:
-        mock_dest_repository.get_by_id.return_value = sample_destination
+        # Mock retriever response
+        rag_service.retriever.retrieve_context.return_value = {
+            "context": "Paris has the Eiffel Tower.",
+            "sources": ["paris_guide.txt"]
+        }
         
-        # Setup mock file
-        file_path = tmp_path / "guide.md"
-        file_path.write_text("Hello World!")
+        # Mock Groq
+        class MockMessage:
+            content = "The Eiffel Tower is in Paris."
+        class MockChoice:
+            message = MockMessage()
+        class MockGroqResponse:
+            choices = [MockChoice()]
+            
+        rag_service.groq_client.chat.completions.create.return_value = MockGroqResponse()
         
-        # Mock OpenAI embeddings
-        class MockData:
-            def __init__(self, embedding):
-                self.embedding = embedding
-                
-        class MockResponse:
-            def __init__(self):
-                self.data = [MockData([0.1, 0.2, 0.3])]
-                
-        rag_service.openai_client.embeddings.create = AsyncMock(return_value=MockResponse())
-
-        payload = IngestRequest(
-            destination_id=sample_destination.id,
-            file_path=str(file_path)
-        )
-
-        result = await rag_service.ingest_markdown(payload, sample_admin)
+        payload = RAGQueryRequest(query="What is in Paris?")
+        result = await rag_service.query_knowledge_base(payload)
         
-        assert result["message"] == "Ingestion successful"
-        assert result["chunks_processed"] == 1
-        assert result["source_file"] == "guide.md"
-        
-        # Verify db interaction
-        mock_document_repository.delete_source_documents.assert_called_once()
-        mock_document_repository.create.assert_called_once()
-        mock_document_repository.db.commit.assert_called_once()
+        assert result.answer == "The Eiffel Tower is in Paris."
+        assert "paris_guide.txt" in result.sources
 
     @pytest.mark.asyncio
-    async def test_ingest_markdown_unauthorized(
+    async def test_query_knowledge_base_no_context(
         self,
         rag_service: RAGService,
-        sample_destination: Destination,
     ) -> None:
-        user = User()
-        user.role = UserRole.USER
+        # Mock retriever response empty
+        rag_service.retriever.retrieve_context.return_value = {
+            "context": "",
+            "sources": []
+        }
         
-        payload = IngestRequest(
-            destination_id=sample_destination.id,
-            file_path="dummy.md"
-        )
+        payload = RAGQueryRequest(query="What is in Paris?")
+        result = await rag_service.query_knowledge_base(payload)
         
-        with pytest.raises(ResourceNotFoundException):
-            await rag_service.ingest_markdown(payload, user)
+        assert "I couldn't find any relevant travel documents" in result.answer
+        assert len(result.sources) == 0
 
-
-class TestRAGServiceSearch:
     @pytest.mark.asyncio
-    async def test_search_success(
+    async def test_get_status(
         self,
         rag_service: RAGService,
-        mock_document_repository: AsyncMock,
-        mock_dest_repository: AsyncMock,
-        sample_destination: Destination,
     ) -> None:
-        mock_dest_repository.get_by_id.return_value = sample_destination
+        mock_result = MagicMock()
+        mock_result.scalar.return_value = 10
+        rag_service.repository.db.execute = AsyncMock(return_value=mock_result)
         
-        # Mock OpenAI embeddings
-        class MockData:
-            def __init__(self, embedding):
-                self.embedding = embedding
-                
-        class MockResponse:
-            def __init__(self):
-                self.data = [MockData([0.1, 0.2, 0.3])]
-                
-        rag_service.openai_client.embeddings.create = AsyncMock(return_value=MockResponse())
-        
-        # Mock repository search response
-        doc = Document()
-        doc.id = uuid.uuid4()
-        doc.title = "guide.md - Part 1"
-        doc.content = "Paris is great"
-        doc.source_file = "guide.md"
-        doc.chunk_index = 0
-        
-        mock_document_repository.similarity_search.return_value = [(doc, 0.15)]
-        
-        payload = SearchRequest(
-            destination_id=sample_destination.id,
-            query="Paris",
-            limit=5
-        )
-        
-        results = await rag_service.search(payload)
-        
-        assert len(results) == 1
-        assert results[0].content == "Paris is great"
-        assert results[0].score == 0.15
-        mock_document_repository.similarity_search.assert_called_once()
+        status = await rag_service.get_status()
+        assert status["total_chunks"] == 10

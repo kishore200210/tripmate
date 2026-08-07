@@ -23,20 +23,22 @@ export default function LandingPage() {
 
       <main className="flex-1">
         {/* Hero Section */}
-        <section className="px-6 py-24 text-center max-w-4xl mx-auto">
-          <h1 className="text-5xl font-extrabold text-neutral-900 mb-6 tracking-tight">
-            Plan your next adventure with the power of AI.
-          </h1>
-          <p className="text-xl text-neutral-600 mb-10 max-w-2xl mx-auto">
-            TripMate is your all-in-one travel concierge. Generate itineraries, analyze landmarks, and manage bookings seamlessly.
-          </p>
-          <div className="flex gap-4 justify-center">
-            <Link href="/signup">
-              <Button size="lg" className="text-lg px-8">Get Started</Button>
-            </Link>
-            <Link href="/destinations">
-              <Button size="lg" variant="outline" className="text-lg px-8">Browse Destinations</Button>
-            </Link>
+        <section className="relative px-6 flex flex-col justify-center items-center min-h-[85vh] bg-[linear-gradient(180deg,rgba(5,10,20,0.78)_0%,rgba(5,10,20,0.60)_45%,rgba(5,10,20,0.72)_100%),url('/landing-hero.jpg')] bg-cover bg-center">
+          <div className="max-w-[700px] w-full text-center pt-10 pb-20">
+            <h1 className="hero-title mb-6 text-white text-shadow-hero tracking-tight">
+              Plan your next adventure with the power of AI.
+            </h1>
+            <p className="hero-subtitle mb-10 text-[#F1F5F9] text-shadow-hero mx-auto">
+              TripMate is your all-in-one travel concierge. Generate itineraries, analyze landmarks, and manage bookings seamlessly.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Link href="/signup">
+                <Button size="lg" className="px-8 shadow-lg">Get Started</Button>
+              </Link>
+              <Link href="/destinations">
+                <Button size="lg" variant="outline" className="px-8 bg-white/10 text-white border-white/20 hover:bg-white/20 transition-all shadow-lg">Browse Destinations</Button>
+              </Link>
+            </div>
           </div>
         </section>
 

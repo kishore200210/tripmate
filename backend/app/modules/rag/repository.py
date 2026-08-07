@@ -32,27 +32,23 @@ class DocumentRepository(BaseRepository[Document]):
         await self.db.commit()
 
     async def similarity_search(
-        self, query_embedding: list[float], destination_id: UUID, limit: int = 5
+        self, query_embedding: list[float], destination_id: UUID | None = None, limit: int = 5
     ) -> list[tuple[Document, float]]:
         """
         Perform a pgvector similarity search using L2 distance.
         Returns a list of tuples containing (Document, distance_score).
         Lower distance = more similar.
+        If destination_id is None, it searches globally.
         """
-        # Document.embedding.l2_distance(query_embedding) computes the L2 distance
         distance = Document.embedding.l2_distance(query_embedding).label("distance")
         
-        stmt = (
-            select(Document, distance)
-            .where(
-                Document.destination_id == destination_id,
-                # In production, might filter by threshold, e.g., distance < 1.0
-            )
-            .order_by(distance)
-            .limit(limit)
-        )
+        stmt = select(Document, distance)
+        
+        if destination_id:
+            stmt = stmt.where(Document.destination_id == destination_id)
+            
+        stmt = stmt.order_by(distance).limit(limit)
         
         result = await self.db.execute(stmt)
         
-        # result.all() returns tuples of (Document, float)
         return [(row[0], row[1]) for row in result.all()]

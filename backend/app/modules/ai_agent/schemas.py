@@ -17,3 +17,4 @@ class AgentChatResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     response: str = Field(..., description="The AI's formulated response")
+    tools_used: list[str] = Field(default_factory=list, description="List of tools used by the AI Agent")

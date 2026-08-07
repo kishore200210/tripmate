@@ -74,9 +74,19 @@ class AIAgentService(BaseService[ChatMessageRepository]):
             final_ai_msg = final_state["messages"][-1]
             ai_response_text = final_ai_msg.content
             
+            # Extract tools used
+            tools_used = []
+            for msg in final_state["messages"][len(langchain_messages):]:
+                if hasattr(msg, "tool_calls") and msg.tool_calls:
+                    for call in msg.tool_calls:
+                        tools_used.append(call["name"])
+            
+            tools_used = list(set(tools_used))
+            
         except Exception as e:
             logger.error("LangGraph Agent Error: %s", str(e))
             ai_response_text = "I'm sorry, I encountered an error while processing your request."
+            tools_used = []
 
         # 5. Save AI's response to DB
         ai_db_msg = ChatMessage(
@@ -88,4 +98,4 @@ class AIAgentService(BaseService[ChatMessageRepository]):
         )
         await self.repository.create(ai_db_msg)
 
-        return AgentChatResponse(response=ai_response_text)
+        return AgentChatResponse(response=ai_response_text, tools_used=tools_used)

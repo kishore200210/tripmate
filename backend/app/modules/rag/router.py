@@ -12,9 +12,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.modules.auth.middleware import get_current_user
 from app.modules.destinations.repository import DestinationRepository
-from app.modules.rag.controller import RAGController
+
 from app.modules.rag.repository import DocumentRepository
-from app.modules.rag.schemas import IngestRequest, SearchRequest, SearchResult
+from app.modules.rag.schemas import RAGQueryRequest, RAGQueryResponse
 from app.modules.rag.service import RAGService
 from app.modules.users.models import User
 
@@ -35,36 +35,44 @@ def get_rag_service(db: AsyncSession = Depends(get_db)) -> RAGService:
 # ── Endpoints ─────────────────────────────────────────────────────────────────
 
 @router.post(
-    "/ingest",
-    status_code=status.HTTP_201_CREATED,
-    summary="Ingest a Markdown file into the vector database",
+    "/query",
+    response_model=RAGQueryResponse,
+    summary="Query the travel knowledge base",
 )
-async def ingest_markdown(
-    payload: IngestRequest,
+async def query_knowledge_base(
+    payload: RAGQueryRequest,
+    service: RAGService = Depends(get_rag_service),
+) -> RAGQueryResponse:
+    """
+    RAG pipeline: Embeds the query, retrieves chunks, formats context, and returns LLM generated answer with citations.
+    """
+    return await service.query_knowledge_base(payload)
+
+
+@router.post(
+    "/reindex",
+    status_code=status.HTTP_200_OK,
+    summary="Reindex all travel documents",
+)
+async def reindex_documents(
     current_user: User = Depends(get_current_user),
     service: RAGService = Depends(get_rag_service),
 ) -> dict[str, Any]:
     """
-    Reads a Markdown file, chunks it, generates embeddings via OpenAI,
-    and saves the chunks to the database using pgvector.
-    Requires ADMIN role.
+    Reads all documents from backend/travel_docs/, generates embeddings, and saves to pgvector.
+    Requires authentication (ideally admin, but limited to logged-in users here for simplicity).
     """
-    return await RAGController.ingest_markdown(payload, service, current_user)
+    return await service.reindex_all_documents()
 
 
-@router.post(
-    "/search",
-    response_model=list[SearchResult],
-    summary="Perform a similarity search on the knowledge base",
+@router.get(
+    "/status",
+    summary="Get RAG index status",
 )
-async def search(
-    payload: SearchRequest,
+async def get_status(
     service: RAGService = Depends(get_rag_service),
-    # Search can be public or authenticated, depending on product rules.
-    # For now, we'll keep it public or optionally protected. Let's make it public.
-) -> list[SearchResult]:
+) -> dict[str, Any]:
     """
-    Takes a query, generates an embedding, and performs a pgvector L2 distance search.
-    Returns the most relevant chunks with citations.
+    Returns the total number of chunks currently indexed in the vector DB.
     """
-    return await RAGController.search(payload, service)
+    return await service.get_status()

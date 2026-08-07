@@ -1,83 +1,45 @@
 @import "tailwindcss";
 
-/* ── Brand / Design System Tokens ─────────────────────────────────────────────
- *
- * Tailwind CSS v4 resolves utility classes like bg-primary, text-primary-foreground,
- * bg-muted, border-border, etc. directly from CSS custom properties under the
- * `--color-*` namespace (set via @theme inline).
- *
- * This project uses blue-600 (#2563eb) as the primary brand color — consistent
- * with all explicit `bg-blue-600` / `text-blue-600` usages across the app.
- * ─────────────────────────────────────────────────────────────────────────── */
+/* ── Brand / Design System Tokens ───────────────────────────────────────────── */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: transparent;
+  --foreground: #F8FAFC;
 
-  /* Primary — blue-600 brand color */
-  --primary: #2563eb;
-  --primary-foreground: #ffffff;
+  /* Primary Accent — blue-600 */
+  --primary: #2563EB;
+  --primary-foreground: #FFFFFF;
 
-  /* Secondary */
-  --secondary: #f1f5f9;
-  --secondary-foreground: #0f172a;
+  /* Secondary Accent */
+  --secondary: #7C3AED;
+  --secondary-foreground: #FFFFFF;
 
-  /* Muted — for subdued backgrounds and text */
-  --muted: #f8fafc;
-  --muted-foreground: #64748b;
+  /* Muted Text */
+  --muted: rgba(255, 255, 255, 0.12);
+  --muted-foreground: #CBD5E1;
 
   /* Accent */
-  --accent: #f1f5f9;
-  --accent-foreground: #0f172a;
+  --accent: rgba(255, 255, 255, 0.12);
+  --accent-foreground: #FFFFFF;
 
-  /* Destructive */
-  --destructive: #dc2626;
-  --destructive-foreground: #ffffff;
+  /* Semantics */
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --success: #22C55E;
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-foreground: #FFFFFF;
 
   /* UI chrome */
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #2563eb;
+  --border: rgba(255, 255, 255, 0.18);
+  --input: rgba(255, 255, 255, 0.12);
+  --ring: #2563EB;
 
   /* Popover / Card */
-  --popover: #ffffff;
-  --popover-foreground: #171717;
-  --card: #ffffff;
-  --card-foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-
-    /* Primary — keep blue visible on dark bg */
-    --primary: #3b82f6;
-    --primary-foreground: #ffffff;
-
-    /* Secondary */
-    --secondary: #1e293b;
-    --secondary-foreground: #f8fafc;
-
-    /* Muted */
-    --muted: #1e293b;
-    --muted-foreground: #94a3b8;
-
-    /* Accent */
-    --accent: #1e293b;
-    --accent-foreground: #f8fafc;
-
-    /* UI chrome */
-    --border: #334155;
-    --input: #334155;
-    --ring: #3b82f6;
-
-    /* Popover / Card */
-    --popover: #0f172a;
-    --popover-foreground: #f8fafc;
-    --card: #0f172a;
-    --card-foreground: #f8fafc;
-  }
+  --popover: rgba(255, 255, 255, 0.12);
+  --popover-foreground: #FFFFFF;
+  --card: rgba(255, 255, 255, 0.12);
+  --card-foreground: #F8FAFC;
 }
 
 @theme inline {
@@ -99,6 +61,12 @@
 
   --color-destructive: var(--destructive);
   --color-destructive-foreground: var(--destructive-foreground);
+  
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
 
   --color-border: var(--border);
   --color-input: var(--input);
@@ -109,12 +77,94 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
 
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Base Styles (Mobile First) */
+body {
+  font-size: 16px;
+  font-weight: 400;
+  color: #4B5563; /* Default body / section description */
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: #111827;
+}
+
+.hero-title {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: #FFFFFF;
+}
+
+.hero-subtitle {
+  font-size: 16px;
+  font-weight: 400;
+  color: #F1F5F9;
+}
+
+.section-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.card-title {
+  font-size: 20px;
+  font-weight: 700;
+  color: #111827;
+}
+
+p, .body-text {
+  font-size: 16px;
+  font-weight: 400;
+  color: #4B5563; /* Section Description / Card Description */
+}
+
+.small-text {
+  font-size: 15px;
+}
+
+a, .text-link {
+  color: #2563EB;
+}
+
+/* Specific Utilities */
+.text-shadow-hero {
+  text-shadow: 0px 4px 12px rgba(0,0,0,0.55);
+}
+
+/* Tablet Typography (768px - 1023px) */
+@media (min-width: 768px) {
+  .hero-title { font-size: 44px; }
+  .hero-subtitle { font-size: 18px; }
+  .section-title { font-size: 30px; }
+  p, .body-text, body { font-size: 16px; }
+  .card-title { font-size: 24px; }
+  .small-text { font-size: 16px; }
+}
+
+/* Laptop Typography (1024px - 1439px) */
+@media (min-width: 1024px) {
+  .hero-title { font-size: 56px; }
+  .hero-subtitle { font-size: 20px; }
+  .section-title { font-size: 36px; }
+  p, .body-text, body { font-size: 17px; }
+}
+
+/* Desktop Typography (1440px+) */
+@media (min-width: 1440px) {
+  .hero-title { font-size: 64px; }
+  .hero-subtitle { font-size: 22px; }
+  .section-title { font-size: 40px; }
+  p, .body-text, body { font-size: 18px; }
 }

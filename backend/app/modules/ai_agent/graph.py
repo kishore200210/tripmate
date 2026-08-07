@@ -16,14 +16,27 @@ from langgraph.prebuilt import ToolNode, tools_condition
 from typing_extensions import TypedDict
 
 from app.core.config import get_settings
-from app.modules.ai_agent.tools import get_currency_tool, get_weather_tool
+from app.modules.ai_agent.tools import (
+    get_currency_tool,
+    get_weather_tool,
+    generate_itinerary_pdf_tool,
+    search_knowledge_base_tool,
+    get_ml_recommendations_tool,
+    analyze_image_tool,
+)
 
 logger = logging.getLogger(__name__)
 
-AGENT_PROMPT = """You are TripMate's AI Assistant Agent.
-You are equipped with tools to fetch the weather and calculate currency exchange rates.
-Always use your tools to provide accurate, real-time-like information when users ask about weather or currency.
-If a tool fails, inform the user gracefully.
+AGENT_PROMPT = """You are TripMate's Smart AI Assistant.
+You have access to powerful tools to assist users with their travel planning.
+Follow these strict rules:
+1. WEATHER: If the user asks about the weather, temperature, or rain, use `get_weather_tool`.
+2. CURRENCY: If the user asks to convert money or budgets, use `get_currency_tool`.
+3. PDF ITINERARY: If the user asks to generate, create, or export an itinerary PDF, use `generate_itinerary_pdf_tool`.
+4. DESTINATION KNOWLEDGE: If the user asks about foods to try, packing lists, culture, or attractions, use `search_knowledge_base_tool`. 
+5. ML RECOMMENDATIONS: If the user asks for trip ideas, destination recommendations, or says things like "I have $2000 and 5 days, where should I go?", use `get_ml_recommendations_tool`.
+6. IMAGE ANALYSIS: If the user provides a photo URL or asks "Where is this image from?", use `analyze_image_tool`.
+7. If a tool fails, inform the user gracefully.
 Keep your responses helpful, engaging, and directly related to the user's travel needs.
 """
 
@@ -35,7 +48,7 @@ class AgentState(TypedDict):
 
 
 # 2. Configure Tools and Model
-tools = [get_weather_tool, get_currency_tool]
+tools = [get_weather_tool, get_currency_tool, generate_itinerary_pdf_tool, search_knowledge_base_tool, get_ml_recommendations_tool, analyze_image_tool]
 
 settings = get_settings()
 api_key = settings.GROQ_API_KEY.strip() if settings.GROQ_API_KEY else ""
