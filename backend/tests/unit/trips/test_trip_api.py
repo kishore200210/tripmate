@@ -5,7 +5,7 @@ API router and controller tests for the Trips module.
 """
 
 import uuid
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock, MagicMock
 
@@ -65,7 +65,11 @@ def test_list_trips_success(client: TestClient, mock_trip_service: AsyncMock, mo
                 status=TripStatus.PLANNING,
                 cover_image_url=None,
                 destination_id=None,
-                user_id=mock_user.id
+                place_name=None,
+                place_country=None,
+                user_id=mock_user.id,
+                created_at=datetime.now(tz=timezone.utc),
+                updated_at=datetime.now(tz=timezone.utc),
             )
         ],
         total=1,
@@ -97,7 +101,11 @@ def test_get_trip_success(client: TestClient, mock_trip_service: AsyncMock, mock
         status=TripStatus.CONFIRMED,
         cover_image_url=None,
         destination_id=None,
-        user_id=mock_user.id
+        place_name=None,
+        place_country=None,
+        user_id=mock_user.id,
+        created_at=datetime.now(tz=timezone.utc),
+        updated_at=datetime.now(tz=timezone.utc),
     )
 
     response = client.get(f"/api/v1/trips/{trip_id}")
@@ -129,7 +137,11 @@ def test_create_trip_success(client: TestClient, mock_trip_service: AsyncMock, m
         status=TripStatus.PLANNING,
         cover_image_url=None,
         destination_id=None,
-        user_id=mock_user.id
+        place_name=None,
+        place_country=None,
+        user_id=mock_user.id,
+        created_at=datetime.now(tz=timezone.utc),
+        updated_at=datetime.now(tz=timezone.utc),
     )
 
     payload = {
@@ -173,7 +185,11 @@ def test_update_trip_success(client: TestClient, mock_trip_service: AsyncMock, m
         status=TripStatus.PLANNING,
         cover_image_url=None,
         destination_id=None,
-        user_id=mock_user.id
+        place_name=None,
+        place_country=None,
+        user_id=mock_user.id,
+        created_at=datetime.now(tz=timezone.utc),
+        updated_at=datetime.now(tz=timezone.utc),
     )
 
     payload = {

@@ -31,6 +31,22 @@ export interface PaginatedResponse<T> {
 export type Nullable<T> = T | null;
 export type Optional<T> = T | undefined;
 
+// ── Place Search (Nominatim Geocoding) ─────────────────────────────────────────
+
+/** A geocoded place result from the backend Nominatim proxy. */
+export interface PlaceResult {
+  place_id: string;
+  display_name: string;
+  name: string;
+  city: Nullable<string>;
+  state: Nullable<string>;
+  country: Nullable<string>;
+  country_code: Nullable<string>; // ISO 3166-1 alpha-2, e.g. "in", "de"
+  place_type: Nullable<string>;   // e.g. "City", "Country"
+  latitude: Nullable<number>;
+  longitude: Nullable<number>;
+}
+
 // ── Destination ────────────────────────────────────────────────────────────────
 
 /** A travel destination catalog entry as returned by the API. */
@@ -72,6 +88,8 @@ export interface Trip {
   status: TripStatus;
   cover_image_url: Nullable<string>;
   destination_id: Nullable<string>;
+  place_name: Nullable<string>;
+  place_country: Nullable<string>;
   user_id: string;
   created_at: string;
   updated_at: string;

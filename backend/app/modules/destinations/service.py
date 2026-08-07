@@ -22,6 +22,7 @@ from uuid import UUID
 
 from fastapi import UploadFile
 
+from app.core.embeddings import EmbeddingService
 from app.core.exceptions import (
     BusinessRuleViolationException,
     ResourceAlreadyExistsException,
@@ -44,11 +45,35 @@ logger = logging.getLogger(__name__)
 UPLOAD_DIR = Path("uploads/destinations")
 
 
-class DestinationService(BaseService[DestinationRepository]):
-    """Service layer for destination operations."""
+def build_destination_embedding_text(destination: Destination) -> str:
+    """
+    Combine destination name, city, country, description, and tags into a single
+    searchable text string for vector embedding generation.
+    """
+    parts = []
+    if destination.name:
+        parts.append(f"Name: {destination.name}")
+    if destination.city:
+        parts.append(f"City: {destination.city}")
+    if destination.country:
+        parts.append(f"Country: {destination.country}")
+    if destination.description:
+        parts.append(f"Description: {destination.description}")
+    if destination.tags:
+        parts.append(f"Tags: {', '.join(destination.tags)}")
+    return "\n".join(parts)
 
-    def __init__(self, repository: DestinationRepository) -> None:
+
+class DestinationService(BaseService[DestinationRepository]):
+    """Service layer for destination operations including semantic vector search."""
+
+    def __init__(
+        self,
+        repository: DestinationRepository,
+        embedding_service: EmbeddingService | None = None,
+    ) -> None:
         super().__init__(repository=repository)
+        self.embedding_service = embedding_service or EmbeddingService()
         UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 
     # ── Read Operations ───────────────────────────────────────────────────────
@@ -64,12 +89,18 @@ class DestinationService(BaseService[DestinationRepository]):
         sort_desc: bool = False,
         is_admin: bool = False,
     ) -> DestinationPaginatedResponse:
-        """Search destinations with filtering, sorting, and pagination."""
+        """
+        Search destinations using a hybrid approach:
+        Step 1: Perform exact SQL ILIKE search.
+        Step 2: If SQL search returns 0 results and a query string exists,
+                fall back to pgvector semantic cosine similarity search.
+        """
         # Guard against arbitrary column injection via sort_by.
         valid_sort_fields = {"name", "country", "avg_budget", "created_at", "duration_days"}
         if sort_by not in valid_sort_fields:
             sort_by = "name"
 
+        # Step 1: Perform exact SQL search
         items, total = await self.repository.search(
             skip=skip,
             limit=limit,
@@ -80,6 +111,34 @@ class DestinationService(BaseService[DestinationRepository]):
             sort_desc=sort_desc,
             include_inactive=is_admin,
         )
+
+        # Step 2: Fallback to vector search if query provided and SQL returns no results
+        if total == 0 and query and query.strip():
+            try:
+                query_embedding = await self.embedding_service.generate_embedding(query)
+                if query_embedding:
+                    vec_items, vec_total = await self.repository.vector_search(
+                        query_embedding=query_embedding,
+                        skip=skip,
+                        limit=limit,
+                        country=country,
+                        tag=tag,
+                    )
+                    if vec_items:
+                        response_items = []
+                        for dest, score in vec_items:
+                            resp = DestinationResponse.model_validate(dest)
+                            resp.similarity_score = round(score, 4)
+                            response_items.append(resp)
+
+                        return DestinationPaginatedResponse(
+                            items=response_items,
+                            total=vec_total,
+                            skip=skip,
+                            limit=limit,
+                        )
+            except Exception as e:
+                logger.warning("Vector search fallback skipped/failed: %s", str(e))
 
         return DestinationPaginatedResponse(
             items=[DestinationResponse.model_validate(item) for item in items],
@@ -107,7 +166,7 @@ class DestinationService(BaseService[DestinationRepository]):
     async def create_destination(
         self, payload: DestinationCreateRequest
     ) -> DestinationResponse:
-        """Create a new destination catalog entry (Admin only)."""
+        """Create a new destination catalog entry and generate its embedding (Admin only)."""
         logger.info("DestinationService.create_destination: name=%s", payload.name)
 
         if await self.repository.name_exists(payload.name):
@@ -128,13 +187,20 @@ class DestinationService(BaseService[DestinationRepository]):
             tags=payload.tags or [],
         )
 
+        # Generate embedding for the new destination
+        try:
+            embed_text = build_destination_embedding_text(destination)
+            destination.embedding = await self.embedding_service.generate_embedding(embed_text)
+        except Exception as e:
+            logger.warning("Failed to generate embedding during create: %s", str(e))
+
         created = await self.repository.create(destination)
         return DestinationResponse.model_validate(created)
 
     async def update_destination(
         self, destination_id: UUID, payload: DestinationUpdateRequest
     ) -> DestinationResponse:
-        """Partially update a destination (Admin only)."""
+        """Partially update a destination and refresh its embedding (Admin only)."""
         logger.info("DestinationService.update_destination: id=%s", destination_id)
 
         destination = await self.repository.get_by_id(destination_id)
@@ -168,8 +234,36 @@ class DestinationService(BaseService[DestinationRepository]):
         if payload.tags is not None:
             destination.tags = payload.tags
 
+        # Regenerate embedding with updated details
+        try:
+            embed_text = build_destination_embedding_text(destination)
+            destination.embedding = await self.embedding_service.generate_embedding(embed_text)
+        except Exception as e:
+            logger.warning("Failed to generate embedding during update: %s", str(e))
+
         updated = await self.repository.update(destination)
         return DestinationResponse.model_validate(updated)
+
+    async def bulk_generate_embeddings(self) -> dict[str, Any]:
+        """
+        Generate and store embeddings for all existing active destinations.
+        Admin batch endpoint.
+        """
+        destinations = await self.repository.get_all_active_destinations()
+        if not destinations:
+            return {"processed": 0, "message": "No active destinations found."}
+
+        texts = [build_destination_embedding_text(d) for d in destinations]
+        embeddings = await self.embedding_service.generate_embeddings(texts)
+
+        for dest, embedding in zip(destinations, embeddings):
+            dest.embedding = embedding
+            await self.repository.update(dest)
+
+        return {
+            "processed": len(destinations),
+            "message": f"Successfully generated embeddings for {len(destinations)} destinations.",
+        }
 
     async def delete_destination(self, destination_id: UUID) -> None:
         """Soft-delete a destination (Admin only)."""

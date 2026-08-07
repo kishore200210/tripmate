@@ -4,7 +4,7 @@ app/modules/trips/schemas.py
 Pydantic v2 schemas for the Trips module.
 """
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
 
@@ -22,6 +22,8 @@ class TripCreateRequest(BaseModel):
     end_date: date | None = Field(None)
     budget: Decimal | None = Field(None, ge=0, max_digits=10, decimal_places=2)
     destination_id: UUID | None = Field(None)
+    place_name: str | None = Field(None, max_length=300)
+    place_country: str | None = Field(None, max_length=100)
 
     @model_validator(mode="after")
     def validate_dates(self) -> "TripCreateRequest":
@@ -40,6 +42,8 @@ class TripUpdateRequest(BaseModel):
     budget: Decimal | None = Field(None, ge=0, max_digits=10, decimal_places=2)
     status: TripStatus | None = Field(None)
     destination_id: UUID | None = Field(None)
+    place_name: str | None = Field(None, max_length=300)
+    place_country: str | None = Field(None, max_length=100)
 
     @model_validator(mode="after")
     def validate_dates(self) -> "TripUpdateRequest":
@@ -62,7 +66,11 @@ class TripResponse(BaseModel):
     status: TripStatus
     cover_image_url: str | None
     destination_id: UUID | None
+    place_name: str | None
+    place_country: str | None
     user_id: UUID
+    created_at: datetime
+    updated_at: datetime
 
 
 class TripPaginatedResponse(PaginatedResponse[TripResponse]):

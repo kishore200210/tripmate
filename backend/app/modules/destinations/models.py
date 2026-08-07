@@ -96,6 +96,12 @@ class Destination(Base, TimestampMixin, SoftDeleteMixin):
         Numeric(precision=10, scale=2), nullable=True
     )
 
+    # pgvector column — 1536-dim vector for semantic destination search
+    embedding: Mapped[list[float] | None] = mapped_column(
+        Vector(EMBEDDING_DIMENSIONS), nullable=True
+    )
+
+
     # ── Relationships ──────────────────────────────────────
     reviews: Mapped[list["Review"]] = relationship(
         "Review",

@@ -72,7 +72,10 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: list[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
 
     # ── External APIs ─────────────────────────────────────
-    OPENAI_API_KEY: str  # REQUIRED
+    GROQ_API_KEY: str  # REQUIRED — set in .env
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    OPENAI_API_KEY: str | None = None  # Optional (only needed for RAG embeddings)
     OPENAI_MODEL: str = "gpt-4o"
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
 
@@ -103,3 +106,7 @@ def get_settings() -> Settings:
     improving performance significantly.
     """
     return Settings()
+
+
+# Module-level instance for direct import (e.g. from app.core.config import settings)
+settings = get_settings()

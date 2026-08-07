@@ -15,6 +15,7 @@ import type {
   Destination,
   DestinationListResponse,
   DestinationCountResponse,
+  PlaceResult,
   Trip,
   TripStatus,
   TripListResponse,
@@ -35,6 +36,10 @@ export const tripKeys = {
   list: (params: TripParams) => ["trips", "list", params] as const,
   detail: (id: string) => ["trips", "detail", id] as const,
   itinerary: (tripId: string) => ["itinerary", tripId] as const,
+};
+
+export const placeKeys = {
+  search: (q: string) => ["places", "search", q] as const,
 };
 
 // ── Destination Hooks ──────────────────────────────────────────────────────────
@@ -97,6 +102,29 @@ export function useDestination(id: string) {
       return data;
     },
     enabled: !!id,
+  });
+}
+
+// ── Place Search Hook ──────────────────────────────────────────────────────────
+
+/**
+ * Search for places worldwide via the backend Nominatim proxy.
+ * Requires at least 2 characters. Results are cached for 5 minutes.
+ * Use with a debounced query value in the component (300-500ms recommended).
+ */
+export function usePlaceSearch(query: string) {
+  return useQuery<PlaceResult[]>({
+    queryKey: placeKeys.search(query),
+    queryFn: async ({ signal }) => {
+      const { data } = await api.get<PlaceResult[]>("/places/search", {
+        params: { q: query },
+        signal,
+      });
+      return data;
+    },
+    enabled: query.trim().length >= 2,
+    staleTime: 1000 * 60 * 5, // 5 minutes — mirrors backend cache TTL
+    retry: false,              // Don't retry on network errors during typing
   });
 }
 
@@ -190,11 +218,22 @@ export function useGenerateItinerary(tripId: string) {
   });
 }
 
-export function useRegenerateDayPlan(tripId: string, dayNo: number) {
+export interface RegenerateDayPayload {
+  dayNo?: number;
+  preferences?: string;
+}
+
+export function useRegenerateDayPlan(tripId: string, initialDayNo?: number) {
   const queryClient = useQueryClient();
-  return useMutation<any, Error, AIGeneratePayload>({
+  return useMutation<any, Error, RegenerateDayPayload>({
     mutationFn: async (payload) => {
-      const { data } = await api.post(`/trips/${tripId}/itinerary/generate/${dayNo}`, payload);
+      const targetDay = payload.dayNo ?? initialDayNo;
+      if (!targetDay || targetDay <= 0) {
+        throw new Error("Invalid day number specified for regeneration.");
+      }
+      const { data } = await api.post(`/trips/${tripId}/itinerary/generate/${targetDay}`, {
+        preferences: payload.preferences,
+      });
       return data;
     },
     onSuccess: () => {
@@ -247,7 +286,7 @@ export function useUpdateTrip(id: string) {
       const { data } = await api.patch<Trip>(`/trips/${id}`, payload);
       return data;
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["trips"] });
       queryClient.invalidateQueries({ queryKey: tripKeys.detail(id) });
     },

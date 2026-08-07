@@ -43,12 +43,18 @@ class DestinationRepository(BaseRepository[Destination]):
         )
 
         if query:
-            search_filter = or_(
-                Destination.name.ilike(f"%{query}%"),
-                Destination.description.ilike(f"%{query}%"),
-            )
-            stmt = stmt.where(search_filter)
-            count_stmt = count_stmt.where(search_filter)
+            q_clean = query.strip()
+            if q_clean:
+                pattern = f"%{q_clean}%"
+                search_filter = or_(
+                    Destination.name.ilike(pattern),
+                    Destination.country.ilike(pattern),
+                    Destination.city.ilike(pattern),
+                    Destination.description.ilike(pattern),
+                    func.array_to_string(Destination.tags, " ").ilike(pattern),
+                )
+                stmt = stmt.where(search_filter)
+                count_stmt = count_stmt.where(search_filter)
 
         if country:
             country_filter = Destination.country.ilike(f"%{country}%")
@@ -94,3 +100,58 @@ class DestinationRepository(BaseRepository[Destination]):
         )
         result = await self.db.execute(stmt)
         return result.scalar_one() or 0
+
+    async def vector_search(
+        self,
+        query_embedding: list[float],
+        skip: int = 0,
+        limit: int = 20,
+        country: str | None = None,
+        tag: str | None = None,
+    ) -> tuple[list[tuple[Destination, float]], int]:
+        """
+        Perform a pgvector cosine similarity search across destinations.
+        Returns a tuple of ((destination, similarity_score), total_count).
+        """
+        if not query_embedding:
+            return [], 0
+
+        # Cosine distance in pgvector
+        distance_expr = Destination.embedding.cosine_distance(query_embedding)
+        # Cosine similarity = 1 - distance
+        similarity_expr = (1.0 - distance_expr).label("similarity_score")
+
+        stmt = select(Destination, similarity_expr).where(
+            Destination.is_deleted.is_(False),
+            Destination.embedding.isnot(None),
+        )
+        count_stmt = select(func.count(Destination.id)).where(
+            Destination.is_deleted.is_(False),
+            Destination.embedding.isnot(None),
+        )
+
+        if country:
+            country_filter = Destination.country.ilike(f"%{country}%")
+            stmt = stmt.where(country_filter)
+            count_stmt = count_stmt.where(country_filter)
+
+        if tag:
+            tag_filter = Destination.tags.any(tag)
+            stmt = stmt.where(tag_filter)
+            count_stmt = count_stmt.where(tag_filter)
+
+        stmt = stmt.order_by(distance_expr.asc()).offset(skip).limit(limit)
+
+        items_result = await self.db.execute(stmt)
+        count_result = await self.db.execute(count_stmt)
+
+        items = [(row[0], float(row[1])) for row in items_result.all()]
+        total = count_result.scalar_one() or 0
+
+        return items, total
+
+    async def get_all_active_destinations(self) -> list[Destination]:
+        """Return all active (non-deleted) destinations for embedding generation."""
+        stmt = select(Destination).where(Destination.is_deleted.is_(False))
+        result = await self.db.execute(stmt)
+        return list(result.scalars().all())

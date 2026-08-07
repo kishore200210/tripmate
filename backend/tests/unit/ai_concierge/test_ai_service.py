@@ -27,11 +27,11 @@ def mock_message_repository() -> AsyncMock:
 def ai_service(
     mock_message_repository: AsyncMock
 ) -> AIConciergeService:
-    # Patch AsyncOpenAI internally so it doesn't try to connect
-    with patch("app.modules.ai_concierge.service.AsyncOpenAI") as mock_openai_cls:
+    # Patch AsyncGroq internally so it doesn't try to connect
+    with patch("app.modules.ai_concierge.service.AsyncGroq") as mock_groq_cls:
         # Create a mock instance
-        mock_openai_instance = MagicMock()
-        mock_openai_cls.return_value = mock_openai_instance
+        mock_groq_instance = MagicMock()
+        mock_groq_cls.return_value = mock_groq_instance
         
         service = AIConciergeService(
             repository=mock_message_repository,
@@ -57,7 +57,7 @@ class TestAIServiceStream:
         mock_message_repository.get_session_messages.return_value = []
         session_id = uuid.uuid4()
         
-        # Setup mock stream for OpenAI
+        # Setup mock stream for Groq
         # Async generator returning chunks
         async def mock_stream():
             class MockChoice:
@@ -72,7 +72,7 @@ class TestAIServiceStream:
             yield MockChunk("Hello ")
             yield MockChunk("World!")
             
-        ai_service.openai_client.chat.completions.create = AsyncMock(return_value=mock_stream())
+        ai_service.groq_client.chat.completions.create = AsyncMock(return_value=mock_stream())
 
         payload = ChatMessageRequest(content="Hi there!")
         

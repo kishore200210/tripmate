@@ -70,6 +70,7 @@ class DestinationResponse(BaseModel):
     avg_budget: Decimal | None
     duration_days: int | None
     tags: list[str] | None
+    similarity_score: float | None = None
     created_at: datetime
     updated_at: datetime
 

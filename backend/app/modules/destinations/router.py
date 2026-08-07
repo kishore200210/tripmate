@@ -114,6 +114,18 @@ async def get_destination(
 # ── Admin Endpoints ────────────────────────────────────────────────────────────
 
 @router.post(
+    "/embeddings/generate-all",
+    summary="Generate vector embeddings for all destinations (Admin only)",
+    description="Batch process all active destinations and generate/update vector embeddings using OpenAI.",
+    dependencies=[Depends(require_role(UserRole.ADMIN))],
+)
+async def generate_all_embeddings(
+    service: DestinationService = Depends(get_destination_service),
+) -> dict:
+    return await DestinationController.generate_all_embeddings(service)
+
+
+@router.post(
     "/",
     response_model=DestinationResponse,
     status_code=status.HTTP_201_CREATED,

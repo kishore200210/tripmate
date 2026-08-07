@@ -7,16 +7,14 @@ import {
   MapPin,
   Clock,
   Loader2,
-  CalendarDays,
   CloudRain,
   Utensils,
   CheckSquare,
   Sparkles,
   Navigation,
   RefreshCw,
-  FileText
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -87,7 +85,7 @@ export default function ItineraryPage({
   const { data: aiDetails, isLoading: isAiDetailsLoading } = useAIItineraryDetails(id);
   
   const generateItineraryMutation = useGenerateItinerary(id);
-  const regenerateDayMutation = useRegenerateDayPlan(id, 0); // we will pass dynamic day in mutate
+  const regenerateDayMutation = useRegenerateDayPlan(id);
 
   const [isGenerateDialogOpen, setIsGenerateDialogOpen] = useState(false);
   const [preferences, setPreferences] = useState("");
@@ -129,7 +127,7 @@ export default function ItineraryPage({
   };
 
   const handleRegenerateDay = (dayNo: number) => {
-    regenerateDayMutation.mutateAsync({ preferences }).then(() => {
+    regenerateDayMutation.mutateAsync({ dayNo, preferences }).then(() => {
         toast.success(`Day ${dayNo} regenerated successfully!`);
         setActiveRegenerateDay(null);
         setPreferences("");

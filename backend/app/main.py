@@ -163,7 +163,15 @@ def create_application() -> FastAPI:
     @application.exception_handler(RequestValidationError)
     async def fast_api_validation_handler(request: Request, exc: RequestValidationError) -> JSONResponse:
         logger.warning("422 Unprocessable Entity | path=%s", request.url.path)
-        return JSONResponse(status_code=422, content={"error": {"message": "Validation Error", "detail": exc.errors()}})
+        # Pydantic v2 puts a ValueError object inside exc.errors()[i]['ctx']['error'].
+        # json.dumps cannot serialise Exception instances — stringify ctx values.
+        safe_errors = []
+        for err in exc.errors():
+            safe_err = dict(err)
+            if "ctx" in safe_err and isinstance(safe_err["ctx"], dict):
+                safe_err["ctx"] = {k: str(v) for k, v in safe_err["ctx"].items()}
+            safe_errors.append(safe_err)
+        return JSONResponse(status_code=422, content={"error": {"message": "Validation Error", "detail": safe_errors}})
 
     @application.exception_handler(Exception)
     async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
@@ -189,6 +197,7 @@ def create_application() -> FastAPI:
     from app.modules.ai_agent.router import router as ai_agent_router
     from app.modules.pdf.router import router as pdf_router
     from app.modules.vision.router import router as vision_router
+    from app.modules.places.router import router as places_router
     
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(users_router, prefix="/api/v1")
@@ -202,6 +211,7 @@ def create_application() -> FastAPI:
     application.include_router(ai_agent_router, prefix="/api/v1")
     application.include_router(pdf_router, prefix="/api/v1")
     application.include_router(vision_router, prefix="/api/v1")
+    application.include_router(places_router, prefix="/api/v1")
 
     # Serve uploaded static files
     os.makedirs("uploads", exist_ok=True)

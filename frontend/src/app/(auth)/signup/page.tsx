@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Plane, Eye, EyeOff, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";

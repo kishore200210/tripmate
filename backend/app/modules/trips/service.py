@@ -78,6 +78,8 @@ class TripService(BaseService[TripRepository]):
             end_date=payload.end_date,
             budget=payload.budget,
             destination_id=payload.destination_id,
+            place_name=payload.place_name.strip() if payload.place_name else None,
+            place_country=payload.place_country.strip() if payload.place_country else None,
             user_id=current_user.id,
             status=TripStatus.PLANNING,
         )
@@ -112,6 +114,10 @@ class TripService(BaseService[TripRepository]):
             trip.title = payload.title.strip()
         if payload.description is not None:
             trip.description = payload.description.strip()
+        if payload.place_name is not None:
+            trip.place_name = payload.place_name.strip()
+        if payload.place_country is not None:
+            trip.place_country = payload.place_country.strip()
         
         trip.start_date = new_start
         trip.end_date = new_end

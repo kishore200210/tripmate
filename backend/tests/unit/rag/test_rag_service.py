@@ -38,7 +38,7 @@ def rag_service(
     mock_document_repository: AsyncMock, mock_dest_repository: AsyncMock
 ) -> RAGService:
     # Patch AsyncOpenAI internally
-    with patch("app.modules.rag.service.AsyncOpenAI") as mock_openai_cls:
+    with patch("app.core.embeddings.AsyncOpenAI") as mock_openai_cls:
         mock_openai_instance = MagicMock()
         mock_openai_cls.return_value = mock_openai_instance
         

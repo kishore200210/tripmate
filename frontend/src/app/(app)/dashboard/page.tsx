@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Plane, Calendar, FileText, Loader2, ArrowRight } from "lucide-react";
+import { Plane, Calendar, FileText, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { useTrips, useDestinationCount } from "@/hooks/useDataAPI";

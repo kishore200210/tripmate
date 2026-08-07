@@ -23,6 +23,7 @@ openai>=1.40.0                      # OpenAI SDK for chat, embeddings
 groq>=0.9.0                         # Groq SDK for fast inference
 langchain>=0.3.0                    # LLM orchestration and chains
 langchain-openai>=0.2.0             # LangChain OpenAI integration
+langchain-groq>=0.2.0               # LangChain Groq integration
 langgraph>=0.2.0                    # Stateful AI agent graphs
 tiktoken>=0.7.0                     # Token counting for context window management
 

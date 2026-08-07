@@ -6,7 +6,7 @@ Unit tests for ItineraryService.
 
 import uuid
 from datetime import time
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -16,6 +16,8 @@ from app.modules.itineraries.repository import ItineraryRepository
 from app.modules.itineraries.schemas import (
     ItineraryItemCreateRequest,
     ItineraryItemUpdateRequest,
+    ItineraryResponse,
+    AIGenerateRequest,
 )
 from app.modules.itineraries.service import ItineraryService
 from app.modules.trips.models import ItineraryItem, Trip
@@ -175,8 +177,7 @@ class TestItineraryServiceDelete:
         mock_itinerary_repository.update.assert_called_once()
 
 
-from unittest.mock import patch
-from app.modules.itineraries.schemas import AIGenerateRequest, ItineraryResponse
+from app.core.exceptions import ResourceNotFoundException, ValidationException
 
 class TestItineraryServiceGenerate:
     @pytest.mark.asyncio
@@ -237,7 +238,7 @@ class TestItineraryServiceGenerate:
 
     @pytest.mark.asyncio
     @patch("app.modules.itineraries.service.ItineraryGenerator")
-    async def test_regenerate_day_plan_success(
+    async def test_regenerate_day_plan_success_day_1(
         self,
         mock_generator_class,
         itinerary_service: ItineraryService,
@@ -249,19 +250,72 @@ class TestItineraryServiceGenerate:
         mock_trip_repository.get_user_trip.return_value = sample_trip
         mock_generator_instance = mock_generator_class.return_value
         mock_generator_instance.regenerate_day = AsyncMock(return_value={
-            "theme": "New Theme",
-            "description": "New Desc",
+            "theme": "Day 1 New Theme",
+            "description": "Day 1 New Desc",
             "activities": []
         })
         
         mock_itinerary_repository.db = AsyncMock()
         
-        # Mock the db.scalar calls for finding Itinerary and DayPlan
+        from app.modules.trips.models import Itinerary, DayPlan
+        mock_itinerary_db = Itinerary(id=uuid.uuid4(), trip_id=sample_trip.id, budget_estimate="500")
+        mock_day_plan_db = DayPlan(id=uuid.uuid4(), itinerary_id=mock_itinerary_db.id, day_no=1, theme="Old Day 1", description="Old Desc")
+        
+        async def mock_scalar_side_effect(stmt):
+            stmt_str = str(stmt).lower()
+            if "day_plans" in stmt_str:
+                return mock_day_plan_db
+            elif "itineraries" in stmt_str:
+                return mock_itinerary_db
+            return None
+            
+        mock_itinerary_repository.db.scalar.side_effect = mock_scalar_side_effect
+        
+        mock_itinerary_resp = ItineraryResponse(
+            id=mock_itinerary_db.id,
+            trip_id=sample_trip.id,
+            budget_estimate="500",
+            packing_checklist=None,
+            restaurant_recommendations=None,
+            local_attractions=None,
+            weather_suggestions=None,
+            day_plans=[]
+        )
+        with patch.object(itinerary_service, "get_ai_itinerary", return_value=mock_itinerary_resp):
+            payload = AIGenerateRequest(preferences="Fun")
+            result = await itinerary_service.regenerate_day_plan(sample_trip.id, 1, payload, sample_user)
+            
+            assert result.id == mock_itinerary_db.id
+            assert mock_day_plan_db.day_no == 1
+            assert mock_day_plan_db.theme == "Day 1 New Theme"
+            mock_generator_instance.regenerate_day.assert_called_once_with(sample_trip.title, 1, "Old Day 1", "Fun")
+            mock_itinerary_repository.db.commit.assert_called_once()
+
+    @pytest.mark.asyncio
+    @patch("app.modules.itineraries.service.ItineraryGenerator")
+    async def test_regenerate_day_plan_success_day_5(
+        self,
+        mock_generator_class,
+        itinerary_service: ItineraryService,
+        mock_trip_repository: AsyncMock,
+        mock_itinerary_repository: AsyncMock,
+        sample_user: User,
+        sample_trip: Trip,
+    ) -> None:
+        mock_trip_repository.get_user_trip.return_value = sample_trip
+        mock_generator_instance = mock_generator_class.return_value
+        mock_generator_instance.regenerate_day = AsyncMock(return_value={
+            "theme": "Day 5 Adventure",
+            "description": "Day 5 Desc",
+            "activities": []
+        })
+        
+        mock_itinerary_repository.db = AsyncMock()
+        
         from app.modules.trips.models import Itinerary, DayPlan
         mock_itinerary_db = Itinerary(id=uuid.uuid4(), trip_id=sample_trip.id)
-        mock_day_plan_db = DayPlan(id=uuid.uuid4(), itinerary_id=mock_itinerary_db.id, day_no=1, theme="Old", description="Old")
+        mock_day_plan_db = DayPlan(id=uuid.uuid4(), itinerary_id=mock_itinerary_db.id, day_no=5, theme="Old Day 5", description="Old")
         
-        # side_effect for db.scalar
         async def mock_scalar_side_effect(stmt):
             stmt_str = str(stmt).lower()
             if "day_plans" in stmt_str:
@@ -283,10 +337,34 @@ class TestItineraryServiceGenerate:
             day_plans=[]
         )
         with patch.object(itinerary_service, "get_ai_itinerary", return_value=mock_itinerary_resp):
-            payload = AIGenerateRequest(preferences="Fun")
-            result = await itinerary_service.regenerate_day_plan(sample_trip.id, 1, payload, sample_user)
+            payload = AIGenerateRequest(preferences="Hiking")
+            result = await itinerary_service.regenerate_day_plan(sample_trip.id, 5, payload, sample_user)
             
-            assert result.id == mock_itinerary_db.id
-            mock_generator_instance.regenerate_day.assert_called_once()
-            mock_itinerary_repository.db.commit.assert_called_once()
+            assert mock_day_plan_db.day_no == 5
+            assert mock_day_plan_db.theme == "Day 5 Adventure"
+            mock_generator_instance.regenerate_day.assert_called_once_with(sample_trip.title, 5, "Old Day 5", "Hiking")
+
+    @pytest.mark.asyncio
+    async def test_regenerate_day_plan_invalid_day_0_raises_exception(
+        self,
+        itinerary_service: ItineraryService,
+        sample_user: User,
+        sample_trip: Trip,
+    ) -> None:
+        payload = AIGenerateRequest(preferences="Relaxing")
+        with pytest.raises(ValidationException) as exc_info:
+            await itinerary_service.regenerate_day_plan(sample_trip.id, 0, payload, sample_user)
+        assert "Day number must be greater than 0" in str(exc_info.value)
+
+    @pytest.mark.asyncio
+    async def test_regenerate_day_plan_negative_day_raises_exception(
+        self,
+        itinerary_service: ItineraryService,
+        sample_user: User,
+        sample_trip: Trip,
+    ) -> None:
+        payload = AIGenerateRequest(preferences="Relaxing")
+        with pytest.raises(ValidationException) as exc_info:
+            await itinerary_service.regenerate_day_plan(sample_trip.id, -1, payload, sample_user)
+        assert "Day number must be greater than 0" in str(exc_info.value)
 

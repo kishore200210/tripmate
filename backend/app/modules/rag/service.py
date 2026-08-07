@@ -10,8 +10,7 @@ import uuid
 from typing import Any
 from uuid import UUID
 
-from openai import AsyncOpenAI
-
+from app.core.embeddings import EmbeddingService
 from app.core.exceptions import ResourceNotFoundException, ValidationException
 from app.modules.destinations.models import Document
 from app.modules.destinations.repository import DestinationRepository
@@ -23,21 +22,23 @@ from app.shared.service import BaseService
 
 logger = logging.getLogger(__name__)
 
-EMBEDDING_MODEL = "text-embedding-3-small"
-
 
 class RAGService(BaseService[DocumentRepository]):
     """Service layer for RAG operations."""
 
     def __init__(
-        self, repository: DocumentRepository, destination_repository: DestinationRepository
+        self,
+        repository: DocumentRepository,
+        destination_repository: DestinationRepository,
+        embedding_service: EmbeddingService | None = None,
     ) -> None:
         super().__init__(repository=repository)
         self.destination_repository = destination_repository
-        
-        self.openai_client = AsyncOpenAI(
-            api_key=os.environ.get("OPENAI_API_KEY", "dummy-key-for-tests")
-        )
+        self.embedding_service = embedding_service or EmbeddingService()
+
+    @property
+    def openai_client(self):
+        return self.embedding_service.client
 
     def _chunk_markdown(self, content: str, max_chunk_size: int = 1500) -> list[str]:
         """
@@ -69,19 +70,8 @@ class RAGService(BaseService[DocumentRepository]):
         return chunks
 
     async def _generate_embeddings(self, texts: list[str]) -> list[list[float]]:
-        """Call OpenAI to generate embeddings in batches."""
-        if not texts:
-            return []
-
-        try:
-            response = await self.openai_client.embeddings.create(
-                model=EMBEDDING_MODEL,
-                input=texts
-            )
-            return [data.embedding for data in response.data]
-        except Exception as e:
-            logger.error("OpenAI Embedding Error: %s", str(e))
-            raise ValidationException(f"Failed to generate embeddings: {str(e)}")
+        """Call EmbeddingService to generate embeddings in batches."""
+        return await self.embedding_service.generate_embeddings(texts)
 
     async def ingest_markdown(self, payload: IngestRequest, current_user: User) -> dict[str, Any]:
         """Ingest a Markdown file, chunk it, embed it, and save to DB."""

@@ -1,22 +1,116 @@
 @import "tailwindcss";
 
+/* ── Brand / Design System Tokens ─────────────────────────────────────────────
+ *
+ * Tailwind CSS v4 resolves utility classes like bg-primary, text-primary-foreground,
+ * bg-muted, border-border, etc. directly from CSS custom properties under the
+ * `--color-*` namespace (set via @theme inline).
+ *
+ * This project uses blue-600 (#2563eb) as the primary brand color — consistent
+ * with all explicit `bg-blue-600` / `text-blue-600` usages across the app.
+ * ─────────────────────────────────────────────────────────────────────────── */
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
-}
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Primary — blue-600 brand color */
+  --primary: #2563eb;
+  --primary-foreground: #ffffff;
+
+  /* Secondary */
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+
+  /* Muted — for subdued backgrounds and text */
+  --muted: #f8fafc;
+  --muted-foreground: #64748b;
+
+  /* Accent */
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+
+  /* Destructive */
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+
+  /* UI chrome */
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #2563eb;
+
+  /* Popover / Card */
+  --popover: #ffffff;
+  --popover-foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+
+    /* Primary — keep blue visible on dark bg */
+    --primary: #3b82f6;
+    --primary-foreground: #ffffff;
+
+    /* Secondary */
+    --secondary: #1e293b;
+    --secondary-foreground: #f8fafc;
+
+    /* Muted */
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+
+    /* Accent */
+    --accent: #1e293b;
+    --accent-foreground: #f8fafc;
+
+    /* UI chrome */
+    --border: #334155;
+    --input: #334155;
+    --ring: #3b82f6;
+
+    /* Popover / Card */
+    --popover: #0f172a;
+    --popover-foreground: #f8fafc;
+    --card: #0f172a;
+    --card-foreground: #f8fafc;
   }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  /* Map design tokens → Tailwind color utilities */
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
 }
 
 body {

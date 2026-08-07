@@ -4,6 +4,7 @@ import os
 from typing import Any
 
 from groq import AsyncGroq
+from app.core.config import get_settings
 
 logger = logging.getLogger(__name__)
 
@@ -38,8 +39,19 @@ Note: scheduled_time must be in HH:MM:SS format or null. Ensure day_no starts at
 
 class ItineraryGenerator:
     def __init__(self):
-        self.client = AsyncGroq(api_key=os.environ.get("GROQ_API_KEY", "dummy-key"))
-        self.model = "llama-3.3-70b-versatile"
+        settings = get_settings()
+        api_key = settings.GROQ_API_KEY.strip() if settings.GROQ_API_KEY else ""
+        
+        is_loaded = bool(api_key and api_key != "dummy-key" and api_key != "dummy-key-for-tests")
+        prefix = api_key[:6] if len(api_key) >= 6 else api_key
+        suffix = api_key[-4:] if len(api_key) >= 10 else ""
+        logger.info(
+            "ItineraryGenerator Groq Client Init — Loaded GROQ API Key: %s | Prefix: %s...%s | Length: %d",
+            is_loaded, prefix, suffix, len(api_key)
+        )
+        
+        self.client = AsyncGroq(api_key=api_key)
+        self.model = settings.GROQ_MODEL
 
     async def generate_itinerary(self, destination: str, duration_days: int, preferences: str | None = None) -> dict[str, Any]:
         """Generate a full trip itinerary using Groq."""

@@ -84,6 +84,23 @@ class TestDestinationServiceSearch:
         mock_repository.search.assert_called_once()
         assert mock_repository.search.call_args.kwargs["sort_by"] == "name"
 
+    @pytest.mark.asyncio
+    async def test_search_destinations_vector_fallback(
+        self, destination_service: DestinationService, mock_repository: AsyncMock, sample_destination: Destination
+    ) -> None:
+        # SQL search returns 0 results
+        mock_repository.search.return_value = ([], 0)
+        # Vector search returns 1 result with score 0.85
+        mock_repository.vector_search.return_value = ([(sample_destination, 0.85)], 1)
+
+        result = await destination_service.search_destinations(query="romantic")
+
+        assert result.total == 1
+        assert len(result.items) == 1
+        assert result.items[0].name == "Paris"
+        assert result.items[0].similarity_score == 0.85
+        mock_repository.vector_search.assert_called_once()
+
 
 class TestDestinationServiceGet:
     @pytest.mark.asyncio

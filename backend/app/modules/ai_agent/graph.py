@@ -9,12 +9,13 @@ import os
 from typing import Annotated
 
 from langchain_core.messages import BaseMessage, SystemMessage
-from langchain_openai import ChatOpenAI
+from langchain_groq import ChatGroq
 from langgraph.graph import StateGraph, START, END
 from langgraph.graph.message import add_messages
 from langgraph.prebuilt import ToolNode, tools_condition
 from typing_extensions import TypedDict
 
+from app.core.config import get_settings
 from app.modules.ai_agent.tools import get_currency_tool, get_weather_tool
 
 logger = logging.getLogger(__name__)
@@ -35,11 +36,22 @@ class AgentState(TypedDict):
 
 # 2. Configure Tools and Model
 tools = [get_weather_tool, get_currency_tool]
-# Use API key from env or dummy for tests
-llm = ChatOpenAI(
-    model="gpt-3.5-turbo", 
+
+settings = get_settings()
+api_key = settings.GROQ_API_KEY.strip() if settings.GROQ_API_KEY else ""
+
+is_loaded = bool(api_key and api_key != "dummy-key" and api_key != "dummy-key-for-tests")
+prefix = api_key[:6] if len(api_key) >= 6 else api_key
+suffix = api_key[-4:] if len(api_key) >= 10 else ""
+logger.info(
+    "AI Agent ChatGroq Init — Loaded GROQ API Key: %s | Prefix: %s...%s | Length: %d",
+    is_loaded, prefix, suffix, len(api_key)
+)
+
+llm = ChatGroq(
+    model=settings.GROQ_MODEL, 
     temperature=0, 
-    api_key=os.environ.get("OPENAI_API_KEY", "dummy-key-for-tests")
+    groq_api_key=api_key
 )
 llm_with_tools = llm.bind_tools(tools)
 

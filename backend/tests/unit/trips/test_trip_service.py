@@ -5,7 +5,7 @@ Unit tests for TripService.
 """
 
 import uuid
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal
 from unittest.mock import AsyncMock
 
@@ -66,7 +66,12 @@ def sample_trip(sample_user: User) -> Trip:
     trip.status = TripStatus.PLANNING
     trip.user_id = sample_user.id
     trip.destination_id = None
+    trip.place_name = None
+    trip.place_country = None
+    trip.cover_image_url = None
     trip.is_deleted = False
+    trip.created_at = datetime.now(tz=timezone.utc)
+    trip.updated_at = datetime.now(tz=timezone.utc)
     return trip
 
 

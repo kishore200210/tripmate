@@ -88,3 +88,9 @@ class DestinationController:
         destination_id: UUID, file: UploadFile, service: DestinationService
     ) -> DestinationResponse:
         return await service.upload_image(destination_id, file)
+
+    @staticmethod
+    async def generate_all_embeddings(
+        service: DestinationService,
+    ) -> dict:
+        return await service.bulk_generate_embeddings()

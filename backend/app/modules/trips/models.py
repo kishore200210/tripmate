@@ -97,6 +97,11 @@ class Trip(Base, TimestampMixin, SoftDeleteMixin):
     # Cloudinary URL for trip cover photo.
     cover_image_url: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
+    # Free-text place name for trips created via geocoding search (Nominatim).
+    # Used when no catalog destination_id is available.
+    place_name: Mapped[str | None] = mapped_column(String(300), nullable=True)
+    place_country: Mapped[str | None] = mapped_column(String(100), nullable=True)
+
     # ── Foreign Keys ──────────────────────────────────────
     user_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

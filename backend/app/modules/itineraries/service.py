@@ -8,7 +8,7 @@ import logging
 import uuid
 from uuid import UUID
 
-from app.core.exceptions import ResourceNotFoundException
+from app.core.exceptions import ResourceNotFoundException, ValidationException
 from app.modules.itineraries.repository import ItineraryRepository
 from app.modules.itineraries.schemas import (
     ItineraryItemCreateRequest,
@@ -154,6 +154,9 @@ class ItineraryService(BaseService[ItineraryRepository]):
         return await self.get_ai_itinerary(trip_id, current_user)
         
     async def regenerate_day_plan(self, trip_id: UUID, day_no: int, payload: AIGenerateRequest, current_user: User) -> ItineraryResponse:
+        if day_no <= 0:
+            raise ValidationException(f"Day number must be greater than 0, got {day_no}.")
+
         await self._verify_trip_ownership(trip_id, current_user.id)
         trip = await self.trip_repository.get_user_trip(trip_id=trip_id, user_id=current_user.id)
         
