@@ -1,0 +1,107 @@
+[
+  {
+    "feature": "Health Check",
+    "status": "PASS",
+    "details": "status=200 body={\"status\":\"ok\",\"app\":\"TripMate\",\"version\":\"1.0.0\",\"environment\":\"development\"}"
+  },
+  {
+    "feature": "Signup",
+    "status": "PASS",
+    "details": "status=201 user_id=fff64554-3dac-464a-bf3d-234e9fb7c606"
+  },
+  {
+    "feature": "Login",
+    "status": "PASS",
+    "details": "status=200 got_token=True user_id=fff64554-3dac-464a-bf3d-234e9fb7c606"
+  },
+  {
+    "feature": "Logout",
+    "status": "PASS",
+    "details": "status=200 body={\"message\":\"Logged out successfully.\"}"
+  },
+  {
+    "feature": "Protected Routes",
+    "status": "PASS",
+    "details": "Unauthenticated=401, Authenticated=200"
+  },
+  {
+    "feature": "User Profile",
+    "status": "PASS",
+    "details": "status=200 email=audit_39c80189@test.com"
+  },
+  {
+    "feature": "Destination List",
+    "status": "PASS",
+    "details": "status=200 total=7 items_returned=7"
+  },
+  {
+    "feature": "Destination Details",
+    "status": "PASS",
+    "details": "status=200 name=Bali"
+  },
+  {
+    "feature": "Trip Creation",
+    "status": "PASS",
+    "details": "status=201 trip_id=a7711f22-6a97-43be-bef1-72aead7b3908"
+  },
+  {
+    "feature": "Trip Editing",
+    "status": "PASS",
+    "details": "status=200 new_title=Updated Audit Trip"
+  },
+  {
+    "feature": "Trip Deletion",
+    "status": "PASS",
+    "details": "status=200 body={\"message\":\"Trip deleted successfully.\"}"
+  },
+  {
+    "feature": "Itinerary List",
+    "status": "PASS",
+    "details": "status=200 body={\"trip_id\":\"debe3265-c7d8-4672-9707-cd87eae89377\",\"items\":[],\"total_items\":0}"
+  },
+  {
+    "feature": "AI Concierge",
+    "status": "PASS",
+    "details": "status=200 response_len=1005 preview=Bonjour! Paris, the City of Light, is a fantastic destination. To pack like a pro, consider the time"
+  },
+  {
+    "feature": "RAG Query",
+    "status": "PASS",
+    "details": "status=200 chunks_indexed=1 answer=I don't have enough information about the food in Japan. The provided context only mentions Paris, its cafe culture, and the Eiffel Tower, but does no"
+  },
+  {
+    "feature": "Smart Agent",
+    "status": "PASS",
+    "details": "status=200 tools_used=['get_weather_tool'] response=The current weather in Paris is mostly cloudy with a temperature of 32.6 degrees Celsius, 28% humidity, and a gentle wind speed of 3.3 km/h. There is "
+  },
+  {
+    "feature": "Places/Weather Proxy",
+    "status": "PASS",
+    "details": "status=200 results=4"
+  },
+  {
+    "feature": "Currency Tool",
+    "status": "PASS",
+    "details": "status=200 tools=['get_currency_tool'] response=The converted amount is 86.59 EUR."
+  },
+  {
+    "feature": "ML Recommendations",
+    "status": "PASS",
+    "details": "status=200 count=5 top3=['Bali', 'Maui', 'Maldives']"
+  },
+  {
+    "feature": "Computer Vision",
+    "status": "PARTIAL",
+    "details": "status=500 (model may reject tiny image) body={\"detail\":\"Failed to analyze image. Please ensure it is a valid JPG/PNG file.\"}"
+  },
+  {
+    "feature": "PDF Generation",
+    "status": "PASS",
+    "details": "status=202 task_id=5028df3f-cd62-45f9-a575-f152c1e09263"
+  },
+  {
+    "feature": "PostgreSQL Persistence",
+    "status": "PASS",
+    "details": "status=200 trips_persisted=1"
+  }
+]

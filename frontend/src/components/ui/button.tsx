@@ -8,11 +8,11 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-[linear-gradient(135deg,#2563EB,#3B82F6)] text-[#FFFFFF] shadow-sm transition-all hover:brightness-110",
+        default: "bg-[linear-gradient(135deg,#2563EB,#3B82F6)] text-white shadow-sm transition-all hover:brightness-110",
         outline:
-          "border border-white/20 bg-transparent text-white hover:bg-white/10",
+          "border border-neutral-200 bg-white text-[#111827] hover:bg-neutral-100",
         secondary:
-          "bg-white/10 border border-white/20 text-white backdrop-blur-md hover:bg-white/20 transition-all",
+          "bg-neutral-100 border border-neutral-200 text-[#111827] hover:bg-neutral-200 transition-all",
         ghost:
           "hover:bg-muted hover:text-foreground aria-expanded:bg-muted aria-expanded:text-foreground dark:hover:bg-muted/50",
         destructive:

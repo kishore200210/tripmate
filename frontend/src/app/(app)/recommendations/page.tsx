@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { getSafeImageUrl } from "@/lib/imageUtils";
 
 interface RecommendedDestination {
   id: string | null;
@@ -224,13 +225,7 @@ export default function RecommendationsPage() {
                   <div key={idx} className="bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row gap-5 items-start">
                     
                     <div className="relative w-full sm:w-40 h-40 rounded-xl overflow-hidden bg-neutral-100 flex-shrink-0">
-                      {dest.image_url ? (
-                        <Image src={dest.image_url} alt={dest.name} fill className="object-cover" />
-                      ) : (
-                        <div className="absolute inset-0 flex items-center justify-center bg-blue-50 text-blue-200">
-                          <Plane className="w-10 h-10" />
-                        </div>
-                      )}
+                      <Image src={getSafeImageUrl(dest.image_url)} alt={dest.name} fill className="object-cover" />
                       <div className="absolute top-2 left-2 bg-white/90 backdrop-blur-sm px-2.5 py-1 rounded-lg shadow-sm border font-bold text-sm text-purple-700 flex items-center gap-1">
                          #{idx + 1}
                       </div>

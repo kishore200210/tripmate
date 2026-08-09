@@ -5,6 +5,7 @@ import { Camera, Image as ImageIcon, Loader2, MapPin, UploadCloud, Plane } from 
 import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
+import { getSafeImageUrl } from "@/lib/imageUtils";
 
 interface RelatedDestination {
   id: string;
@@ -220,8 +221,8 @@ export default function DiscoverPage() {
                       <div key={dest.id} className="bg-white border rounded-xl p-3 shadow-sm flex items-center justify-between group hover:border-emerald-200 transition-colors">
                         <div className="flex items-center gap-3">
                           <div className="relative w-12 h-12 rounded-lg overflow-hidden bg-neutral-100 flex-shrink-0">
-                             {dest.image_url ? (
-                              <Image src={dest.image_url} alt={dest.name} fill className="object-cover" />
+                           {getSafeImageUrl(dest.image_url) !== "/globe.svg" ? (
+                              <Image src={getSafeImageUrl(dest.image_url)} alt={dest.name} fill className="object-cover" />
                             ) : (
                               <div className="absolute inset-0 flex items-center justify-center bg-blue-50 text-blue-200">
                                 <Plane className="w-5 h-5" />
