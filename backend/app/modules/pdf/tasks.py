@@ -17,6 +17,7 @@ from app.db.session import AsyncSessionLocal
 from app.modules.itineraries.repository import ItineraryRepository
 from app.modules.trips.repository import TripRepository
 from app.celery_app import celery_app
+import app.db.model_registry  # noqa: F401
 
 logger = logging.getLogger(__name__)
 
@@ -41,7 +42,7 @@ async def _generate_itinerary_pdf_async(trip_id: str) -> str:
             raise ValueError(f"Trip with id {trip_id} not found or deleted.")
 
         # 2. Fetch Itinerary Items
-        items = await itinerary_repo.get_trip_itinerary(uuid.UUID(trip_id))
+        items = await itinerary_repo.get_trip_timeline(uuid.UUID(trip_id))
 
         # 3. Group items by day_no
         grouped_items = {}

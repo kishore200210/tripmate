@@ -28,7 +28,8 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { useTrip, useDestination, useDeleteTrip, useGenerateItinerary } from "@/hooks/useDataAPI";
+import { useTrip, useDestination, useDeleteTrip, useGenerateItinerary, useGeneratePDF } from "@/hooks/useDataAPI";
+import { api } from "@/lib/api";
 import toast from "react-hot-toast";
 import type { TripStatus } from "@/types";
 
@@ -54,6 +55,57 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
   const { data: destination } = useDestination(trip?.destination_id || "");
   const deleteTripMutation = useDeleteTrip();
   const generateItineraryMutation = useGenerateItinerary(id);
+
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const generatePdfMutation = useGeneratePDF(id);
+
+  const handleGeneratePDF = async () => {
+    if (isGeneratingPdf) return;
+    setIsGeneratingPdf(true);
+    const toastId = toast.loading("Preparing PDF itinerary background generation...");
+    try {
+      const res = await generatePdfMutation.mutateAsync();
+      const taskId = res.task_id;
+
+      toast.loading("PDF generation queued. Processing...", { id: toastId });
+
+      const pollInterval = setInterval(async () => {
+        try {
+          const { data } = await api.get<{ status: string }>(`/pdf/status/${taskId}`);
+          if (data.status === "SUCCESS") {
+            clearInterval(pollInterval);
+            toast.loading("PDF ready! Downloading...", { id: toastId });
+
+            const response = await api.get(`/pdf/download/${taskId}`, { responseType: 'blob' });
+            const blob = new Blob([response.data], { type: 'application/pdf' });
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `itinerary_${trip?.title?.replace(/\s+/g, '_') || 'trip'}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            window.URL.revokeObjectURL(url);
+
+            setIsGeneratingPdf(false);
+            toast.success("PDF downloaded successfully!", { id: toastId });
+          } else if (data.status === "FAILURE") {
+            clearInterval(pollInterval);
+            setIsGeneratingPdf(false);
+            toast.error("Failed to generate PDF itinerary.", { id: toastId });
+          }
+        } catch {
+          clearInterval(pollInterval);
+          setIsGeneratingPdf(false);
+          toast.error("Error checking PDF generation status.", { id: toastId });
+        }
+      }, 1500);
+    } catch (error: any) {
+      setIsGeneratingPdf(false);
+      const msg = error.response?.data?.error?.message || "Failed to trigger PDF generation.";
+      toast.error(msg, { id: toastId });
+    }
+  };
 
   const handleGenerate = () => {
     generateItineraryMutation.mutate({ preferences }, {
@@ -255,9 +307,23 @@ export default function TripDetailPage({ params }: { params: Promise<{ id: strin
             </DialogContent>
           </Dialog>
 
-          <Button variant="outline" disabled className="border-neutral-200">
-            <FileText className="w-4 h-4 mr-2" />
-            Generate PDF
+          <Button
+            variant="outline"
+            onClick={handleGeneratePDF}
+            disabled={isGeneratingPdf}
+            className="border-neutral-200"
+          >
+            {isGeneratingPdf ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Generating PDF...
+              </>
+            ) : (
+              <>
+                <FileText className="w-4 h-4 mr-2" />
+                Generate PDF
+              </>
+            )}
           </Button>
         </div>
       </div>

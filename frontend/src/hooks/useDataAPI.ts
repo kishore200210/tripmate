@@ -306,3 +306,13 @@ export function useDeleteTrip() {
     },
   });
 }
+
+/** Trigger PDF itinerary generation for a trip. */
+export function useGeneratePDF(tripId: string) {
+  return useMutation<{ task_id: string; status: string }, Error, void>({
+    mutationFn: async () => {
+      const { data } = await api.post<{ task_id: string; status: string }>(`/pdf/itinerary/${tripId}`);
+      return data;
+    },
+  });
+}
