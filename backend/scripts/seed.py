@@ -28,6 +28,8 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from sqlalchemy import select
 
 from app.db.session import AsyncSessionLocal
+import app.db.model_registry  # noqa: F401
+from app.modules.users.models import User
 from app.modules.destinations.models import Destination, Document
 
 

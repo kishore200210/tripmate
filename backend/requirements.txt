@@ -34,6 +34,9 @@ pandas>=2.2.0                       # Data manipulation
 joblib>=1.4.2                       # Model serialization
 
 # ── Computer Vision ───────────────────────────────────────
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.13.0+cpu
+torchvision==0.28.0+cpu
 ultralytics>=8.3.0                  # YOLO11 for landmark/object detection
 opencv-python-headless>=4.10.0      # Image processing (headless, no GUI deps)
 Pillow>=10.4.0                      # Image manipulation and I/O

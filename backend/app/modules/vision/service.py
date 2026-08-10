@@ -14,13 +14,18 @@ from PIL import Image
 # Import YOLO. We place it inside a try block or globally.
 try:
     from ultralytics import YOLO
-    
-    # Load model globally to avoid reloading on every request
-    # yolo11n.pt is the nano model, very fast and lightweight.
-    # It will auto-download weights on first run if not present.
-    yolo_model = YOLO("yolo11n.pt")
 except ImportError:
-    yolo_model = None
+    YOLO = None
+
+yolo_model = None
+
+from app.core.config import settings
+
+def get_vision_yolo_model():
+    global yolo_model
+    if yolo_model is None and settings.ENABLE_ML_MODELS and YOLO is not None:
+        yolo_model = YOLO("yolo11n.pt")
+    return yolo_model
 
 from app.core.exceptions import ValidationException
 from app.modules.vision.schemas import BoundingBox, DetectionItem, DetectionResponse
@@ -34,8 +39,9 @@ class VisionService:
     @staticmethod
     async def analyze_image(filename: str, file_bytes: bytes) -> DetectionResponse:
         """Runs YOLO11 inference on an uploaded image stream."""
-        if yolo_model is None:
-            raise ValidationException("YOLO model failed to load. Check dependencies.")
+        model = get_vision_yolo_model()
+        if model is None:
+            raise ValidationException("YOLO model failed to load or is disabled. Check dependencies/settings.")
 
         try:
             # 1. Convert bytes to PIL Image
@@ -48,7 +54,7 @@ class VisionService:
             
             # 3. Run Inference
             # YOLO returns a list of Results objects (one for each image, we only passed one)
-            results = yolo_model.predict(img_array, conf=0.25)
+            results = model.predict(img_array, conf=0.25)
             
             if not results:
                 return DetectionResponse(filename=filename, detections=[])

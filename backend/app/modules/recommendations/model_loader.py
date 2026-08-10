@@ -6,6 +6,8 @@ import os
 import joblib
 import logging
 
+from app.core.config import settings
+
 logger = logging.getLogger(__name__)
 
 class ModelLoader:
@@ -13,6 +15,9 @@ class ModelLoader:
     
     @classmethod
     def load(cls):
+        if not settings.ENABLE_ML_MODELS:
+            return
+            
         if cls._model is None:
             base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
             model_path = os.path.join(base_dir, "models", "recommendation_model.joblib")
@@ -26,6 +31,8 @@ class ModelLoader:
     
     @classmethod
     def get_model(cls):
+        if not settings.ENABLE_ML_MODELS:
+            return None
         if cls._model is None:
             cls.load()
         return cls._model

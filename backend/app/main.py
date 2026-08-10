@@ -76,8 +76,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("   Environment : %s", settings.APP_ENV)
     logger.info("   Debug Mode  : %s", settings.DEBUG)
     
-    ModelLoader.load()
-    YoloModelLoader.load()
+    if settings.ENABLE_ML_MODELS:
+        ModelLoader.load()
+        YoloModelLoader.load()
+    else:
+        logger.info("ML models disabled for low-memory deployment")
     
     yield
     logger.info("🛑 %s shutting down cleanly.", settings.APP_NAME)

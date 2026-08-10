@@ -6,6 +6,8 @@ import logging
 from ultralytics import YOLO
 import os
 
+from app.core.config import settings
+
 logger = logging.getLogger(__name__)
 
 class YoloModelLoader:
@@ -13,6 +15,9 @@ class YoloModelLoader:
     
     @classmethod
     def load(cls):
+        if not settings.ENABLE_ML_MODELS:
+            return
+            
         if cls._model is None:
             try:
                 # Download and load the pre-trained ImageNet classifier
@@ -24,7 +29,9 @@ class YoloModelLoader:
                 logger.error(f"Failed to load YOLO model: {e}")
     
     @classmethod
-    def get_model(cls) -> YOLO:
+    def get_model(cls) -> YOLO | None:
+        if not settings.ENABLE_ML_MODELS:
+            return None
         if cls._model is None:
             cls.load()
         return cls._model

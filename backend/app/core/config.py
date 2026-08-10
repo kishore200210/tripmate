@@ -45,17 +45,13 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str = "tripmate_password"
     POSTGRES_DB: str = "tripmate_db"
 
-    @computed_field  # type: ignore[misc]
-    @property
-    def DATABASE_URL(self) -> str:
-        """Async PostgreSQL connection string for SQLAlchemy + psycopg."""
-        return (
-            f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
-            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
-        )
+    DATABASE_URL: str | None = None
 
     # ── Redis ─────────────────────────────────────────────
     ML_SERVICE_URL: str = Field(default="http://localhost:8001")
+    
+    # ── Machine Learning ──────────────────────────────────
+    ENABLE_ML_MODELS: bool = True
     
     # Observability
     SENTRY_DSN: str | None = None
@@ -103,6 +99,20 @@ class Settings(BaseSettings):
     # ── Rate Limiting ─────────────────────────────────────
     RATE_LIMIT_PER_MINUTE: int = 60
     AI_RATE_LIMIT_PER_MINUTE: int = 10
+
+    @model_validator(mode="after")
+    def assemble_db_connection(self) -> "Settings":
+        if not self.DATABASE_URL:
+            self.DATABASE_URL = (
+                f"postgresql+psycopg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+                f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+            )
+        # Convert standard Postgres URLs to async driver (required for Render)
+        if self.DATABASE_URL.startswith("postgres://"):
+            self.DATABASE_URL = self.DATABASE_URL.replace("postgres://", "postgresql+psycopg://", 1)
+        elif self.DATABASE_URL.startswith("postgresql://"):
+            self.DATABASE_URL = self.DATABASE_URL.replace("postgresql://", "postgresql+psycopg://", 1)
+        return self
 
     @model_validator(mode="after")
     def validate_production_secret(self) -> "Settings":
