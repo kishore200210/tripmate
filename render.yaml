@@ -1,0 +1,83 @@
+version: "1"
+
+services:
+  # 1. FastAPI Backend
+  - type: web
+    name: tripmate-backend
+    env: docker
+    dockerContext: backend
+    dockerfilePath: backend/Dockerfile
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GROQ_API_KEY
+        sync: false # You must set this in the Render Dashboard
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tripmate-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: tripmate-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: tripmate-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: tripmate-redis
+          property: connectionString
+
+  # 2. Celery Worker
+  - type: worker
+    name: tripmate-worker
+    env: docker
+    dockerContext: backend
+    dockerfilePath: backend/Dockerfile
+    dockerCommand: celery -A app.celery_app worker --loglevel=info
+    envVars:
+      - key: APP_ENV
+        value: production
+      - key: SECRET_KEY
+        fromService:
+          type: web
+          name: tripmate-backend
+          envVarKey: SECRET_KEY
+      - key: GROQ_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: tripmate-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: tripmate-redis
+          property: connectionString
+      - key: CELERY_BROKER_URL
+        fromService:
+          type: redis
+          name: tripmate-redis
+          property: connectionString
+      - key: CELERY_RESULT_BACKEND
+        fromService:
+          type: redis
+          name: tripmate-redis
+          property: connectionString
+
+databases:
+  - name: tripmate-db
+    databaseName: tripmatedb
+    user: tripmate
+    plan: free
+
+  - type: redis
+    name: tripmate-redis
+    ipAllowList: [] # internal only
+    plan: free
