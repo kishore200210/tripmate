@@ -316,3 +316,50 @@ export function useGeneratePDF(tripId: string) {
     },
   });
 }
+
+export interface SummaryMetrics {
+  total_users: number;
+  active_users: number;
+  total_trips: number;
+  completed_trips: number;
+  average_trip_budget: number | null;
+  total_trip_budget: number | null;
+}
+
+export interface StatusDistribution {
+  planning: number;
+  confirmed: number;
+  ongoing: number;
+  completed: number;
+  cancelled: number;
+}
+
+export interface TopDestination {
+  name: string;
+  country: string;
+  trip_count: number;
+}
+
+export interface MonthlyTrend {
+  month: string;
+  count: number;
+}
+
+export interface DashboardAnalyticsResponse {
+  summary: SummaryMetrics;
+  status_distribution: StatusDistribution;
+  top_destinations: TopDestination[];
+  monthly_user_registrations: MonthlyTrend[];
+  monthly_trip_creations: MonthlyTrend[];
+}
+
+/** Fetch site-wide admin analytics dashboard statistics. */
+export function useAdminAnalytics() {
+  return useQuery<DashboardAnalyticsResponse, Error>({
+    queryKey: ["admin", "analytics"],
+    queryFn: async () => {
+      const { data } = await api.get<DashboardAnalyticsResponse>("/analytics/dashboard");
+      return data;
+    },
+  });
+}

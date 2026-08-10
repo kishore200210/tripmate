@@ -15,7 +15,7 @@ Engineering Principles:
 """
 
 from functools import lru_cache
-from pydantic import PostgresDsn, computed_field, Field
+from pydantic import PostgresDsn, computed_field, Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -94,6 +94,23 @@ class Settings(BaseSettings):
     # ── Rate Limiting ─────────────────────────────────────
     RATE_LIMIT_PER_MINUTE: int = 60
     AI_RATE_LIMIT_PER_MINUTE: int = 10
+
+    @model_validator(mode="after")
+    def validate_production_secret(self) -> "Settings":
+        if self.APP_ENV == "production":
+            placeholders = [
+                "change_this",
+                "your-super-secret-key",
+                "dummy-key",
+                "test",
+            ]
+            key_lower = self.SECRET_KEY.lower()
+            if any(p in key_lower for p in placeholders) or len(self.SECRET_KEY) < 32:
+                raise ValueError(
+                    "SECRET_KEY must be a cryptographically secure random string "
+                    "of at least 32 characters in production environments."
+                )
+        return self
 
 
 @lru_cache

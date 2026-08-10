@@ -9,6 +9,11 @@ from typing import Any
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.rate_limit import RateLimiter
+from app.core.config import settings
+
+ai_rate_limiter = RateLimiter(limit=settings.AI_RATE_LIMIT_PER_MINUTE)
+
 from app.db.session import get_db
 from app.modules.auth.middleware import get_current_user
 from app.modules.destinations.repository import DestinationRepository
@@ -42,6 +47,7 @@ def get_rag_service(db: AsyncSession = Depends(get_db)) -> RAGService:
 async def query_knowledge_base(
     payload: RAGQueryRequest,
     service: RAGService = Depends(get_rag_service),
+    _rate_limit: None = Depends(ai_rate_limiter),
 ) -> RAGQueryResponse:
     """
     RAG pipeline: Embeds the query, retrieves chunks, formats context, and returns LLM generated answer with citations.

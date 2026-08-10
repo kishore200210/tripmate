@@ -38,8 +38,12 @@ import logging
 
 from fastapi import APIRouter, Depends, Response, status, Cookie, HTTPException
 
+from app.core.rate_limit import RateLimiter
+from app.core.config import settings
 from app.modules.auth.controller import AuthController
 from app.modules.auth.middleware import get_auth_service, get_current_user
+
+auth_rate_limiter = RateLimiter(limit=settings.RATE_LIMIT_PER_MINUTE)
 from app.modules.auth.schemas import (
     LoginRequest,
     LoginResponse,
@@ -93,6 +97,7 @@ async def register(
     payload: RegisterRequest,
     response: Response,
     service: AuthService = Depends(get_auth_service),
+    _rate_limit: None = Depends(auth_rate_limiter),
 ) -> RegisterResponse:
     """
     Architectural Decision — Route Handler as Pure Delegation:
@@ -134,6 +139,7 @@ async def login(
     payload: LoginRequest,
     response: Response,
     service: AuthService = Depends(get_auth_service),
+    _rate_limit: None = Depends(auth_rate_limiter),
 ) -> LoginResponse:
     logger.debug("POST /auth/login invoked")
     return await AuthController.login(payload, service, response)

@@ -10,6 +10,11 @@ from app.modules.computer_vision.predictor import CVService
 from app.modules.computer_vision.schemas import CVAnalysisResponse
 from app.modules.auth.middleware import get_current_user
 
+from app.core.rate_limit import RateLimiter
+from app.core.config import settings
+
+ai_rate_limiter = RateLimiter(limit=settings.AI_RATE_LIMIT_PER_MINUTE)
+
 # The import was fixed below (avoid getting Pydantic validation errors on module load if we got it wrong)
 from app.modules.auth.middleware import get_current_user
 
@@ -19,8 +24,7 @@ router = APIRouter(prefix="/computer-vision", tags=["Computer Vision"])
 async def analyze_image_endpoint(
     image: UploadFile = File(...),
     db: AsyncSession = Depends(get_db),
-    # Optional auth
-    # current_user = Depends(get_current_user)
+    _rate_limit: None = Depends(ai_rate_limiter),
 ):
     if not image.content_type.startswith("image/"):
         raise HTTPException(status_code=400, detail="File provided is not an image.")

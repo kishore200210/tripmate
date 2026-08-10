@@ -9,6 +9,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.rate_limit import RateLimiter
+from app.core.config import settings
+
+ai_rate_limiter = RateLimiter(limit=settings.AI_RATE_LIMIT_PER_MINUTE)
+
 from app.db.session import get_db
 from app.modules.ai_concierge.controller import AIConciergeController
 from app.modules.ai_concierge.repository import ChatMessageRepository
@@ -57,6 +62,7 @@ async def stream_chat(
     payload: ChatMessageRequest,
     current_user: User = Depends(get_current_user),
     service: AIConciergeService = Depends(get_ai_service),
+    _rate_limit: None = Depends(ai_rate_limiter),
 ):
     """
     Takes user input, saves it, and streams back the AI's response chunks.

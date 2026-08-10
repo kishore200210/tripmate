@@ -9,6 +9,11 @@ from uuid import UUID
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.rate_limit import RateLimiter
+from app.core.config import settings
+
+ai_rate_limiter = RateLimiter(limit=settings.AI_RATE_LIMIT_PER_MINUTE)
+
 from app.db.session import get_db
 from app.modules.ai_agent.controller import AIAgentController
 from app.modules.ai_agent.schemas import AgentChatRequest, AgentChatResponse
@@ -42,6 +47,7 @@ async def chat(
     payload: AgentChatRequest,
     current_user: User = Depends(get_current_user),
     service: AIAgentService = Depends(get_ai_agent_service),
+    _rate_limit: None = Depends(ai_rate_limiter),
 ) -> AgentChatResponse:
     """
     Takes a user message, fetches session history, and invokes the LangGraph AI Agent.

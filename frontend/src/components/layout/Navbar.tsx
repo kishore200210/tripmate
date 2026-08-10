@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Plane, LayoutDashboard, Map, Compass, MessageSquare, LogOut, Sparkles, Camera } from "lucide-react";
+import { Plane, LayoutDashboard, Map, Compass, MessageSquare, LogOut, Sparkles, Camera, Shield } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useRouter } from "next/navigation";
@@ -33,6 +33,11 @@ export function Navbar() {
     router.push("/login");
   };
 
+  const dynamicNavItems = [
+    ...navItems,
+    ...(user?.role === "admin" ? [{ name: "Admin", href: "/admin/analytics", icon: Shield }] : []),
+  ];
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-neutral-200 bg-white">
       <div className="container flex h-[72px] items-center px-4 md:px-6 mx-auto">
@@ -41,7 +46,7 @@ export function Navbar() {
           <span className="hidden sm:inline-block">TripMate</span>
         </Link>
         <nav className="flex items-center gap-6 flex-1 overflow-x-auto text-sm font-medium">
-          {navItems.map((item) => {
+          {dynamicNavItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname.startsWith(item.href);
             return (

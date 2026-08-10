@@ -207,6 +207,7 @@ def create_application() -> FastAPI:
     from app.modules.places.router import router as places_router
     from app.modules.recommendations.router import router as recommendations_router
     from app.modules.computer_vision.router import router as computer_vision_router
+    from app.modules.analytics.router import router as analytics_router
     
     application.include_router(auth_router, prefix="/api/v1")
     application.include_router(users_router, prefix="/api/v1")
@@ -223,6 +224,7 @@ def create_application() -> FastAPI:
     application.include_router(places_router, prefix="/api/v1")
     application.include_router(recommendations_router, prefix="/api/v1")
     application.include_router(computer_vision_router, prefix="/api/v1")
+    application.include_router(analytics_router, prefix="/api/v1")
 
     # Serve uploaded static files
     os.makedirs("uploads", exist_ok=True)
