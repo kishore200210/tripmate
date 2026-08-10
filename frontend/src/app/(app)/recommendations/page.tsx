@@ -25,6 +25,7 @@ export default function RecommendationsPage() {
   
   const [budget, setBudget] = useState("100");
   const [duration, setDuration] = useState("7");
+  const [travelers, setTravelers] = useState("1");
   const [climate, setClimate] = useState("Tropical");
   const [travelStyle, setTravelStyle] = useState("Relaxation");
   const [season, setSeason] = useState("Summer");
@@ -40,7 +41,15 @@ export default function RecommendationsPage() {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    
+
+    const parsedTravelers = Number(travelers);
+    const isInteger = /^\d+$/.test(String(travelers).trim());
+    if (!isInteger || isNaN(parsedTravelers) || parsedTravelers < 1 || parsedTravelers > 20) {
+      setError("Number of Travelers must be an integer between 1 and 20.");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
       const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
@@ -54,6 +63,7 @@ export default function RecommendationsPage() {
         body: JSON.stringify({
           budget: parseFloat(budget),
           duration: parseInt(duration, 10),
+          travelers: parsedTravelers,
           climate,
           travel_style: travelStyle,
           season,
@@ -113,6 +123,19 @@ export default function RecommendationsPage() {
             <div className="space-y-2">
               <Label>Duration (Days)</Label>
               <Input type="number" min="1" value={duration} onChange={(e) => setDuration(e.target.value)} required />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Number of Travelers</Label>
+              <Input 
+                type="number" 
+                min="1" 
+                max="20" 
+                step="1" 
+                value={travelers} 
+                onChange={(e) => setTravelers(e.target.value)} 
+                required 
+              />
             </div>
 
             <div className="space-y-2">

@@ -40,6 +40,7 @@ def generate_synthetic_user_history(destinations_df, num_samples=10000):
     for _ in range(num_samples):
         budget = np.random.uniform(30, 300)
         duration = np.random.randint(3, 15)
+        travelers = np.random.randint(1, 21)  # 1–20 travelers
         climate = np.random.choice(climates)
         style = np.random.choice(styles)
         season = np.random.choice(seasons)
@@ -72,6 +73,13 @@ def generate_synthetic_user_history(destinations_df, num_samples=10000):
             score -= abs(adv_score - dest["Adventure_Score"]) * 1.5
             score -= abs(lux_score - dest["Luxury_Score"]) * 1.5
             
+            # Group-size influence: larger groups favour family-friendly
+            # destinations and slightly penalise solo-oriented luxury spots
+            if travelers >= 4:
+                score += dest["Family_Friendly_Score"] * 0.5
+            if travelers >= 8:
+                score += dest["Family_Friendly_Score"] * 0.3
+            
             if score > best_score:
                 best_score = score
                 best_dest = dest["Destination"]
@@ -79,6 +87,7 @@ def generate_synthetic_user_history(destinations_df, num_samples=10000):
         synthetic_data.append({
             "budget": budget,
             "duration": duration,
+            "travelers": travelers,
             "climate": climate,
             "travel_style": style,
             "season": season,
@@ -103,7 +112,7 @@ def train_and_export():
     
     # Define features
     categorical_features = ["climate", "travel_style", "season"]
-    numerical_features = ["budget", "duration", "family_friendly", "adventure", "luxury"]
+    numerical_features = ["budget", "duration", "travelers", "family_friendly", "adventure", "luxury"]
     
     # Preprocessing
     preprocessor = ColumnTransformer(

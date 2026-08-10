@@ -61,14 +61,16 @@ api.interceptors.response.use(
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return api(originalRequest);
       } catch (refreshError) {
-        // If refresh fails, wipe local storage and redirect to login
+        // If refresh fails, use the Zustand store to clear state and redirect
         if (typeof window !== "undefined") {
-          localStorage.removeItem("auth_token");
-          localStorage.removeItem("auth_user");
-          
-          if (!window.location.pathname.startsWith("/login")) {
-            window.location.href = "/login";
-          }
+          // Dynamic import to avoid circular dependencies in Axios
+          import("@/store/useAuthStore").then(({ useAuthStore }) => {
+            useAuthStore.getState().logout();
+            
+            if (!window.location.pathname.startsWith("/login")) {
+              window.location.href = "/login";
+            }
+          });
         }
         return Promise.reject(refreshError);
       }

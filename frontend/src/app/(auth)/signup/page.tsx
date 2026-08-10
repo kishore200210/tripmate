@@ -17,10 +17,29 @@ export default function SignupPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
   const signupMutation = useSignup();
+
+  const validatePassword = (pass: string) => {
+    if (pass.length < 8) return "Password must be at least 8 characters long.";
+    if (!/[A-Z]/.test(pass)) return "Password must contain at least one uppercase letter.";
+    if (!/[a-z]/.test(pass)) return "Password must contain at least one lowercase letter.";
+    if (!/\d/.test(pass)) return "Password must contain at least one number.";
+    if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?`~]/.test(pass)) return "Password must contain at least one special character.";
+    return null;
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const errorMsg = validatePassword(password);
+    if (errorMsg) {
+      setPasswordError(errorMsg);
+      toast.error(errorMsg);
+      return;
+    }
+    setPasswordError("");
+    
     signupMutation.mutate(
       {
         email: email,
@@ -141,6 +160,9 @@ export default function SignupPage() {
                   )}
                 </button>
               </div>
+              {passwordError && (
+                <p className="text-sm text-red-500 mt-1">{passwordError}</p>
+              )}
             </div>
             <Button 
               type="submit" 

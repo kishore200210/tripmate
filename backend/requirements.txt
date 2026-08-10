@@ -62,3 +62,6 @@ python-dotenv>=1.0.1                # Local .env file loading
 pytest>=8.3.0                       # Test runner
 pytest-asyncio>=0.23.8              # Async test support
 pypdf>=5.0.0
+langchain-community>=0.3.0,<0.4.0
+langchain-text-splitters
+langchain-text-splitters

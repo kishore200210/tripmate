@@ -81,9 +81,6 @@ logs/
 *.h5
 *.pt
 *.onnx
-# EXCEPTION: Ensure pretrained YOLO models required at runtime are tracked
-!yolov8n-cls.pt
-!yolo11n-cls.pt
 
 # ------------------------------------------------------------------------------
 # Uploads & Temporary Media

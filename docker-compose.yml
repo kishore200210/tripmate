@@ -41,6 +41,8 @@ services:
       - "8001:8001"
     environment:
       - WORKERS=1
+    volumes:
+      - ./ml_service:/home/kishore/Documents/capstone_project/TripMate/ml_service
 
   backend:
     build: 
@@ -51,12 +53,17 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+psycopg2://tripmate:password@db:5432/tripmatedb
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=tripmate
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=tripmatedb
+      - DATABASE_URL=postgresql+psycopg://tripmate:password@db:5432/tripmatedb
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - ML_SERVICE_URL=http://ml_service:8001
-      - SECRET_KEY=supersecretkey12345
+      - SECRET_KEY=${SECRET_KEY}
     depends_on:
       db:
         condition: service_healthy
@@ -71,14 +78,19 @@ services:
       dockerfile: Dockerfile
     container_name: tripmate_celery
     restart: always
-    command: ["celery", "-A", "app.core.celery_app", "worker", "--loglevel=info"]
+    command: ["celery", "-A", "app.celery_app", "worker", "--loglevel=info"]
     environment:
-      - DATABASE_URL=postgresql+psycopg2://tripmate:password@db:5432/tripmatedb
+      - POSTGRES_HOST=db
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=tripmate
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=tripmatedb
+      - DATABASE_URL=postgresql+psycopg://tripmate:password@db:5432/tripmatedb
       - REDIS_URL=redis://redis:6379/0
       - CELERY_BROKER_URL=redis://redis:6379/0
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - ML_SERVICE_URL=http://ml_service:8001
-      - SECRET_KEY=supersecretkey12345
+      - SECRET_KEY=${SECRET_KEY}
     depends_on:
       db:
         condition: service_healthy

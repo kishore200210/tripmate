@@ -23,6 +23,7 @@ class RecommendationService:
         input_data = pd.DataFrame([{
             "budget": request.budget,
             "duration": request.duration,
+            "travelers": request.travelers,
             "climate": request.climate,
             "travel_style": request.travel_style,
             "season": request.season,
@@ -66,9 +67,10 @@ class RecommendationService:
         return result.scalars().first()
 
     def _generate_reason(self, dest_name: str, confidence: float, req: RecommendationRequest) -> str:
+        travelers_text = f" for {req.travelers} traveler{'s' if req.travelers > 1 else ''}"
         if confidence > 0.8:
-            return f"Highly recommended because it perfectly matches your {req.travel_style.lower()} style and {req.climate.lower()} climate preference."
+            return f"Highly recommended because it perfectly matches your {req.travel_style.lower()} style and {req.climate.lower()} climate preference{travelers_text}."
         elif confidence > 0.5:
-            return f"A strong match for your {req.budget} USD budget and {req.season.lower()} timing."
+            return f"A strong match for your {req.budget} USD daily budget{travelers_text} and {req.season.lower()} timing."
         else:
-            return "An alternative option that balances your preferences uniquely."
+            return f"An alternative option that balances your preferences uniquely{travelers_text}."
