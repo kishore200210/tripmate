@@ -20,17 +20,17 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: tripmate-redis
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: tripmate-redis
           property: connectionString
       - key: CELERY_RESULT_BACKEND
         fromService:
-          type: redis
+          type: keyvalue
           name: tripmate-redis
           property: connectionString
 
@@ -57,27 +57,28 @@ services:
           property: connectionString
       - key: REDIS_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: tripmate-redis
           property: connectionString
       - key: CELERY_BROKER_URL
         fromService:
-          type: redis
+          type: keyvalue
           name: tripmate-redis
           property: connectionString
       - key: CELERY_RESULT_BACKEND
         fromService:
-          type: redis
+          type: keyvalue
           name: tripmate-redis
           property: connectionString
+
+  # 3. Redis (Key Value)
+  - type: keyvalue
+    name: tripmate-redis
+    ipAllowList: [] # internal only
+    plan: free
 
 databases:
   - name: tripmate-db
     databaseName: tripmatedb
     user: tripmate
-    plan: free
-
-  - type: redis
-    name: tripmate-redis
-    ipAllowList: [] # internal only
     plan: free
